@@ -1,0 +1,47 @@
+[
+  {
+    "id": "sastc-001",
+    "title": "Welcome to SASTC Portal",
+    "desc": "Important guidelines and updates for CSE students and faculty members. Classes will resume strictly on schedule.",
+    "date": "August 13, 2026",
+    "isResult": false,
+    "pdfUrl": "",
+    "deptCode": "CSE"
+  },
+  {
+    "id": "sastc-002",
+    "title": "Annual Sports Event Registration",
+    "desc": "Please register your names for the upcoming annual sports event with your respective department heads by August 20th.Please register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20thPlease register your names for the upcoming annual sports event with your respective department heads by August 20th",
+    "date": "August 10, 2026",
+    "isResult": false,
+    "pdfUrl": "",
+    "deptCode": "SASTC"
+  },
+  {
+    "id": "sastc-003",
+    "title": "Agriculture Field Trip Notification",
+    "desc": "All AG department students are requested to gather at the main gate for the scheduled field trip to the research farm.",
+    "date": "August 14, 2026",
+    "isResult": false,
+    "pdfUrl": "",
+    "deptCode": "AG"
+  },
+  {
+    "id": "sastc-004",
+    "title": "BBA Case Study Competition",
+    "desc": "The annual business case study competition will be held next week. Interested BBA students must form teams of three.",
+    "date": "August 15, 2026",
+    "isResult": false,
+    "pdfUrl": "",
+    "deptCode": "BBA"
+  },
+  {
+    "id": "sastc-005",
+    "title": "Campus Cleanliness Drive",
+    "desc": "Join the SASTC campus cleanliness drive this weekend. Open to all departments.",
+    "date": "August 16, 2026",
+    "isResult": false,
+    "pdfUrl": "",
+    "deptCode": "SASTC"
+  }
+]

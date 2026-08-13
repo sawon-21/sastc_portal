@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>SASTC Portal</title>
 
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -34,12 +34,6 @@
       </div>
     </div>
     <div class="header-actions">
-      <button type="button" class="icon-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme">
-        <i class="fa-solid fa-moon" id="themeIcon"></i>
-      </button>
-      <button type="button" class="icon-btn" id="topSearchTrigger" title="Search" aria-label="Search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-      </button>
     </div>
   </header>
 
@@ -66,61 +60,22 @@
         </div>
       </div>
 
-      <!-- Quick Shortcuts Grid -->
-      <div class="quick-grid">
-        <div class="grid-card card-indigo" id="btnGoNotices">
-          <div class="grid-card-icon"><i class="fa-solid fa-bell"></i></div>
-          <h4>Notices</h4>
-          <p id="deptNoticeSub">Filtered for your department</p>
-        </div>
 
-        <div class="grid-card card-emerald" id="btnGoResults">
-          <div class="grid-card-icon"><i class="fa-solid fa-square-poll-vertical"></i></div>
-          <h4>Results</h4>
-          <p>Academic grade sheets</p>
+      <!-- SASTC Notices Section -->
+      <div class="section-header">
+        <h3><i class="fa-solid fa-building-columns"></i> SASTC Notices only</h3>
+      </div>
+      <div id="sastcNoticeList" class="notice-list">
+        <div class="state-box">
+          <i class="fa-solid fa-circle-notch spinner"></i>
+          <span>Loading SASTC notices...</span>
         </div>
       </div>
     </section>
 
     <!-- TAB 2: NOTICE VIEW -->
     <section id="view-notice" class="tab-view">
-      <div class="controls">
-        <div class="search-wrapper">
-          <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input
-            type="text"
-            id="searchInput"
-            class="search-input"
-            placeholder="Search notices..."
-            aria-label="Search notices"
-          >
-          <button type="button" id="clearBtn" class="clear-btn" aria-label="Clear search">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Department Filter Pills -->
-      <div class="dept-tabs" id="deptTabs">
-        <button type="button" class="dept-btn active" data-dept="ALL">
-          <i class="fa-solid fa-layer-group"></i>
-          <span>All</span>
-        </button>
-        <button type="button" class="dept-btn" data-dept="CSE">
-          <i class="fa-solid fa-code"></i>
-          <span>CSE</span>
-        </button>
-        <button type="button" class="dept-btn" data-dept="AG">
-          <i class="fa-solid fa-wheat-awn"></i>
-          <span>Agriculture</span>
-        </button>
-        <button type="button" class="dept-btn" data-dept="BBA">
-          <i class="fa-solid fa-chart-line"></i>
-          <span>BBA</span>
-        </button>
-      </div>
-
-      <!-- Notice List Container -->
+    <!-- Notice List Container -->
       <div id="noticeList" class="notice-list" aria-live="polite">
         <div class="state-box">
           <i class="fa-solid fa-circle-notch spinner"></i>
@@ -141,6 +96,11 @@
 
     <!-- TAB 4: SETTINGS VIEW -->
     <section id="view-settings" class="tab-view">
+      <div class="settings-header-main">
+        <h2>Settings</h2>
+        <p>Manage your application preferences</p>
+      </div>
+
       <div class="settings-card">
         <div class="settings-header">
           <i class="fa-solid fa-sliders"></i>
@@ -148,12 +108,12 @@
         </div>
 
         <!-- Department Selection Dropdown -->
-        <div class="setting-item">
-          <div class="setting-info">
+        <div class="setting-item flex-col-start">
+          <div class="setting-info w-full">
             <label for="deptPreferenceSelect"><strong>Selected Department</strong></label>
-            <p>Show notices & results strictly for your department</p>
+            <p>Show notices strictly for your department</p>
           </div>
-          <select id="deptPreferenceSelect" class="setting-select">
+          <select id="deptPreferenceSelect" class="setting-select w-full mt-2">
             <option value="ALL">Show All Departments</option>
             <option value="CSE">Computer Science (CSE)</option>
             <option value="AG">Agriculture (AG)</option>
@@ -165,19 +125,8 @@
       <!-- App Customization & Cache Settings -->
       <div class="settings-card">
         <div class="settings-header">
-          <i class="fa-solid fa-paint-roller"></i>
-          <h3>Appearance & Data</h3>
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <strong>Color Theme</strong>
-            <p>Switch between light and dark visual themes</p>
-          </div>
-          <div class="theme-switch-group">
-            <button type="button" class="btn-theme-opt" id="btnThemeDark"><i class="fa-solid fa-moon"></i> Dark</button>
-            <button type="button" class="btn-theme-opt" id="btnThemeLight"><i class="fa-solid fa-sun"></i> Light</button>
-          </div>
+          <i class="fa-solid fa-hard-drive"></i>
+          <h3>Data & Storage</h3>
         </div>
 
         <div class="setting-item flex-col">
@@ -187,6 +136,26 @@
           <button type="button" id="clearCacheBtn" class="setting-action-btn danger">
             <i class="fa-solid fa-trash-can"></i> Clear Local Cache
           </button>
+        </div>
+      </div>
+
+      <!-- Developer Details -->
+      <div class="settings-card dev-card">
+        <div class="dev-profile">
+          <div class="dev-avatar"><i class="fa-solid fa-code"></i></div>
+          <div class="dev-info">
+            <h4>OpenSource CodeLab</h4>
+            <p class="dev-org">Developed & Maintained by OpenSource CodeLab</p>
+            <p class="dev-meta">Version 2.0.0 • Last Update: Aug 13, 2026</p>
+            <div class="dev-socials mt-2">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-link fb">
+                <i class="fa-brands fa-facebook"></i> Facebook
+              </a>
+              <a href="https://github.com/sawon-21" target="_blank" rel="noopener noreferrer" class="social-link gh">
+                <i class="fa-brands fa-github"></i> GitHub
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -227,8 +196,9 @@
       </div>
       <div class="modal-body">
         <iframe id="pdfFrame" src="about:blank" title="PDF Notice Viewer"></iframe>
+        <div id="modalTextContent" class="modal-text-content" style="display:none; padding: 24px; font-size: 16px; line-height: 1.6; color: var(--text-main); white-space: pre-wrap;"></div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" id="modalFooter">
         <a id="modalDirectLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary">
           <span>Open Direct PDF</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>

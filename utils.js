@@ -56,25 +56,47 @@ export function debounce(func, wait = 180) {
   };
 }
 
-export function openPdfModal(url, title) {
+export function openPdfModal(url, title, textContentBase64 = null) {
   const modal = document.getElementById("pdfModal");
   const pdfFrame = document.getElementById("pdfFrame");
   const modalTitle = document.getElementById("modalNoticeTitle");
   const modalDirectLink = document.getElementById("modalDirectLink");
+  const modalTextContent = document.getElementById("modalTextContent");
+  const modalFooter = document.getElementById("modalFooter");
 
-  if (!modal || !pdfFrame) return;
+  if (!modal) return;
 
   modalTitle.textContent = title || "Notice Document";
-  modalDirectLink.href = url || "#";
 
-  if (url && url !== "#") {
-    if (url.endsWith(".pdf") || url.includes("/pdf") || url.includes("drive.google")) {
-      pdfFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-    } else {
-      pdfFrame.src = url;
+  if (textContentBase64 && textContentBase64 !== "null") {
+    // Show text mode
+    if (pdfFrame) pdfFrame.style.display = "none";
+    if (modalDirectLink) modalDirectLink.style.display = "none";
+    if (modalFooter) modalFooter.style.display = "none";
+    if (modalTextContent) {
+      modalTextContent.style.display = "block";
+      modalTextContent.textContent = decodeURIComponent(textContentBase64);
     }
   } else {
-    pdfFrame.src = "about:blank";
+    // Show PDF mode
+    if (modalTextContent) modalTextContent.style.display = "none";
+    if (pdfFrame) {
+      pdfFrame.style.display = "block";
+      if (url && url !== "#") {
+        if (url.endsWith(".pdf") || url.includes("/pdf") || url.includes("drive.google")) {
+          pdfFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+        } else {
+          pdfFrame.src = url;
+        }
+      } else {
+        pdfFrame.src = "about:blank";
+      }
+    }
+    if (modalDirectLink) {
+      modalDirectLink.style.display = "inline-flex";
+      modalDirectLink.href = url || "#";
+    }
+    if (modalFooter) modalFooter.style.display = "flex";
   }
 
   modal.classList.add("active");
@@ -125,15 +147,15 @@ export function copyLink(url) {
   document.body.removeChild(textArea);
 }
 
-export function handleNoticeClick(e, url, title) {
+export function handleNoticeClick(e, url, title, textContentBase64 = null) {
   if (e) e.preventDefault();
-  if (url && url !== "#") openPdfModal(url, title);
+  if ((url && url !== "#") || textContentBase64) openPdfModal(url, title, textContentBase64);
 }
 
-export function handlePdfView(e, url, title) {
+export function handlePdfView(e, url, title, textContentBase64 = null) {
   if (e) e.preventDefault();
-  if (url && url !== "#") {
-    openPdfModal(url, title);
+  if ((url && url !== "#") || textContentBase64) {
+    openPdfModal(url, title, textContentBase64);
   } else {
     showToast("PDF document link unavailable", "fa-circle-exclamation");
   }

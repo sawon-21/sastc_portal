@@ -113,6 +113,10 @@ export function getItemsForDept(dept, masterDataset) {
     return masterDataset.filter(item => item._isResult && item._deptCode === "SASTC");
   }
 
+  if (dept === "ALL") {
+    return masterDataset.filter(item => !item._isResult);
+  }
+
   return masterDataset.filter(item => !item._isResult && item._deptCode === dept);
 }
 
