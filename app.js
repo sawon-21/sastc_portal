@@ -1,5 +1,5 @@
 /**
- * Main Application Module & Controller (4-Tab UI Redesign)
+ * Main Application Controller (Theme & Notice Fixes)
  */
 
 import { loadCachedData, fetchLiveData } from './api.js';
@@ -15,37 +15,43 @@ import {
 import { 
   escapeHTML, 
   formatPdfUrl, 
-  openPdfModal, 
   closePdfModal, 
   copyLink, 
   handleNoticeClick, 
   handlePdfView, 
   debounce,
   initSecurityProtections,
-  getTagInfo,
   showToast
 } from './utils.js';
 
+// Global window bindings for inline HTML handlers
 window.handleNoticeClick = handleNoticeClick;
 window.handlePdfView = handlePdfView;
 window.copyLink = copyLink;
 
-// Application State
+// LocalStorage Keys
 const LS_ACTIVE_DEPT = "sastc_active_dept";
+const LS_DEPT_PREF = "sastc_dept_preference";
+const LS_THEME = "sastc_theme";
 const LS_SEEN_KEYS = "sastc_seen_keys";
 
+// Application State
 let activeDept = localStorage.getItem(LS_ACTIVE_DEPT) || "SASTC";
+let deptPreference = localStorage.getItem(LS_DEPT_PREF) || "SASTC";
+let currentTheme = localStorage.getItem(LS_THEME) || "dark";
 let activeTab = "home";
+
 let noticesData = [];
 let resultsData = [];
 let masterDataset = [];
 let seenNoticeKeys = new Set();
 let deferredPrompt = null;
 
-// DOM Elements
+// DOM References
 let searchInput, clearBtn, noticeList, resultList, noticeCount, homeNoticeCount, deptButtons, offlineBanner, installBtn;
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Bind DOM elements
   searchInput = document.getElementById("searchInput");
   clearBtn = document.getElementById("clearBtn");
   noticeList = document.getElementById("noticeList");
@@ -56,12 +62,17 @@ document.addEventListener("DOMContentLoaded", () => {
   offlineBanner = document.getElementById("offlineBanner");
   installBtn = document.getElementById("installBtn");
 
+  // Load seen keys
   try {
     const savedKeys = JSON.parse(localStorage.getItem(LS_SEEN_KEYS) || "[]");
     seenNoticeKeys = new Set(savedKeys);
   } catch (e) { seenNoticeKeys = new Set(); }
 
-  // Initial local cache load
+  // Apply saved Theme & Preference
+  applyTheme(currentTheme);
+  initDeptPreference();
+
+  // Load initial cached data
   const cached = loadCachedData();
   noticesData = cached.noticesData;
   resultsData = cached.resultsData;
@@ -71,10 +82,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initEventListeners();
   initNavTabs();
   
-  // Render views
+  // Initial render across views
   renderAllViews();
 
-  // Background Live Fetch
+  // Background API sync
   fetchLiveData().then(live => {
     if (live.noticesData) noticesData = live.noticesData;
     if (live.resultsData) resultsData = live.resultsData;
@@ -89,18 +100,64 @@ function rebuildMasterDataset() {
 }
 
 /**
- * Navigation Bar Controller (Home, Notice, Result, Profile)
+ * Theme Manager (Light & Dark)
+ */
+function applyTheme(theme) {
+  currentTheme = theme;
+  localStorage.setItem(LS_THEME, theme);
+  document.documentElement.setAttribute("data-theme", theme);
+
+  const themeIcon = document.getElementById("themeIcon");
+  if (themeIcon) {
+    themeIcon.className = theme === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun";
+  }
+
+  const btnDark = document.getElementById("btnThemeDark");
+  const btnLight = document.getElementById("btnThemeLight");
+  if (btnDark) btnDark.classList.toggle("active", theme === "dark");
+  if (btnLight) btnLight.classList.toggle("active", theme === "light");
+}
+
+/**
+ * Department Selector Preference Setup
+ */
+function initDeptPreference() {
+  const selectEl = document.getElementById("deptPreferenceSelect");
+  if (selectEl) {
+    selectEl.value = deptPreference;
+    selectEl.addEventListener("change", (e) => {
+      deptPreference = e.target.value;
+      localStorage.setItem(LS_DEPT_PREF, deptPreference);
+
+      // Auto filter active dept tab
+      if (deptPreference !== "ALL") {
+        activeDept = deptPreference;
+        localStorage.setItem(LS_ACTIVE_DEPT, activeDept);
+        updateActiveDeptPills();
+      }
+      renderAllViews();
+      showToast(`Department preference set to ${deptPreference}`);
+    });
+  }
+}
+
+function updateActiveDeptPills() {
+  deptButtons.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.dept === activeDept);
+  });
+}
+
+/**
+ * 4-Tab Bottom Navigation Bar Controller
  */
 function initNavTabs() {
   const navItems = document.querySelectorAll(".bottom-nav .nav-item");
   navItems.forEach(item => {
     item.addEventListener("click", () => {
-      const targetTab = item.dataset.tab;
-      switchTab(targetTab);
+      switchTab(item.dataset.tab);
     });
   });
 
-  // Top header search icon shortcut
   const topSearchTrigger = document.getElementById("topSearchTrigger");
   if (topSearchTrigger) {
     topSearchTrigger.addEventListener("click", () => {
@@ -109,15 +166,18 @@ function initNavTabs() {
     });
   }
 
-  // Quick Action Grid Shortcuts on Home
-  const btnGoAcademic = document.getElementById("btnGoAcademic");
-  if (btnGoAcademic) {
-    btnGoAcademic.addEventListener("click", () => switchTab("notice"));
+  const themeToggleBtn = document.getElementById("themeToggleBtn");
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", () => {
+      applyTheme(currentTheme === "dark" ? "light" : "dark");
+    });
   }
-  const btnGoReports = document.getElementById("btnGoReports");
-  if (btnGoReports) {
-    btnGoReports.addEventListener("click", () => switchTab("result"));
-  }
+
+  const btnGoNotices = document.getElementById("btnGoNotices");
+  if (btnGoNotices) btnGoNotices.addEventListener("click", () => switchTab("notice"));
+
+  const btnGoResults = document.getElementById("btnGoResults");
+  if (btnGoResults) btnGoResults.addEventListener("click", () => switchTab("result"));
 }
 
 function switchTab(tabName) {
@@ -133,6 +193,9 @@ function switchTab(tabName) {
   renderAllViews();
 }
 
+/**
+ * Main Render Dispatcher
+ */
 function renderAllViews() {
   renderHomeView();
   renderNotices();
@@ -140,23 +203,20 @@ function renderAllViews() {
 }
 
 /**
- * Render Home View Widgets
+ * Home View
  */
 function renderHomeView() {
   if (homeNoticeCount) homeNoticeCount.textContent = masterDataset.length;
 
-  // Latest Hero Card Highlight
-  const resultsOnly = masterDataset.filter(item => item._isResult);
-  const heroItem = resultsOnly[0] || masterDataset[0];
-
+  const heroItem = masterDataset[0];
   if (heroItem) {
     const heroTitle = document.getElementById("heroTitle");
     const heroDesc = document.getElementById("heroDesc");
     const heroDate = document.getElementById("heroDate");
     const heroBtnView = document.getElementById("heroBtnView");
 
-    if (heroTitle) heroTitle.textContent = heroItem.title || "Latest Notice";
-    if (heroDesc) heroDesc.textContent = `${heroItem.department || 'HSTU'} • ${heroItem.category || 'Academic'}`;
+    if (heroTitle) heroTitle.textContent = heroItem.title || "Academic Announcement";
+    if (heroDesc) heroDesc.textContent = `${heroItem.department || 'HSTU'} • ${heroItem.category || 'Notice'}`;
     if (heroDate) heroDate.innerHTML = `<i class="fa-regular fa-clock"></i> ${heroItem.date || 'Recent'}`;
 
     if (heroBtnView) {
@@ -165,23 +225,25 @@ function renderHomeView() {
     }
   }
 
-  // Recent Reports Sub-list
-  const recentReportsList = document.getElementById("recentReportsList");
-  if (recentReportsList && masterDataset.length > 0) {
-    recentReportsList.innerHTML = masterDataset.slice(0, 2).map(item => `
-      <li><i class="fa-solid fa-angle-right"></i> ${escapeHTML(item.title)}</li>
-    `).join("");
+  const deptNoticeSub = document.getElementById("deptNoticeSub");
+  if (deptNoticeSub) {
+    deptNoticeSub.textContent = `Filtered for ${deptPreference === "ALL" ? "All Departments" : deptPreference}`;
   }
 }
 
 /**
- * Render Notice View
+ * Fixed & Optimized Notice Section Engine
  */
 function renderNotices() {
   if (!noticeList) return;
 
   const query = searchInput ? searchInput.value : "";
-  const filtered = getFilteredNotices(query, activeDept, masterDataset);
+  let filtered = getFilteredNotices(query, activeDept, masterDataset);
+
+  // Apply user department selector preference if set
+  if (deptPreference !== "ALL" && activeDept === "ALL") {
+    filtered = filtered.filter(item => item._deptCode === deptPreference);
+  }
 
   if (noticeCount) noticeCount.textContent = filtered.length;
 
@@ -189,7 +251,7 @@ function renderNotices() {
     noticeList.innerHTML = `
       <div class="state-box">
         <i class="fa-regular fa-folder-open"></i>
-        <span>No notices found.</span>
+        <span>No notices found for this selection.</span>
       </div>
     `;
     return;
@@ -199,28 +261,31 @@ function renderNotices() {
 }
 
 /**
- * Render Result View
+ * Result Section (Filter ONLY SASTC)
  */
 function renderResultsView() {
   if (!resultList) return;
 
-  const results = masterDataset.filter(item => item._isResult);
+  // Filter ONLY SASTC results
+  const sastcResults = masterDataset.filter(item => {
+    return item._isResult && (item._deptCode === "SASTC" || (item.department && item.department.toUpperCase().includes("SASTC")));
+  });
 
-  if (results.length === 0) {
+  if (sastcResults.length === 0) {
     resultList.innerHTML = `
       <div class="state-box">
         <i class="fa-solid fa-square-poll-vertical"></i>
-        <span>No examination results published yet.</span>
+        <span>No SASTC examination results published yet.</span>
       </div>
     `;
     return;
   }
 
-  resultList.innerHTML = results.map(item => createCardHTML(item)).join("");
+  resultList.innerHTML = sastcResults.map(item => createCardHTML(item)).join("");
 }
 
 /**
- * Notice Card Template
+ * Card Component Builder
  */
 function createCardHTML(item) {
   const isResult = item._isResult !== undefined ? item._isResult : isResultNotice(item);
@@ -233,7 +298,7 @@ function createCardHTML(item) {
   const date = escapeHTML(item.date || "N/A");
 
   return `
-    <div class="card">
+    <div class="card ${item._isNew ? 'card-new' : ''}">
       <div class="card-header">
         <span class="badge-dept">
           <i class="${deptIcon}"></i> ${displayBadge}
@@ -263,19 +328,19 @@ function createCardHTML(item) {
 }
 
 /**
- * Event Listeners Initialization
+ * Global Event Listeners Setup
  */
 function initEventListeners() {
   deptButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       activeDept = btn.dataset.dept;
       localStorage.setItem(LS_ACTIVE_DEPT, activeDept);
-      deptButtons.forEach(b => b.classList.toggle("active", b.dataset.dept === activeDept));
+      updateActiveDeptPills();
       renderNotices();
     });
   });
 
-  const debouncedRender = debounce(() => renderNotices(), 180);
+  const debouncedRender = debounce(() => renderNotices(), 150);
   if (searchInput) {
     searchInput.addEventListener("input", () => {
       if (clearBtn) clearBtn.style.display = searchInput.value.trim() ? "block" : "none";
@@ -291,6 +356,13 @@ function initEventListeners() {
     });
   }
 
+  // Theme option buttons in settings
+  const btnThemeDark = document.getElementById("btnThemeDark");
+  const btnThemeLight = document.getElementById("btnThemeLight");
+  if (btnThemeDark) btnThemeDark.addEventListener("click", () => applyTheme("dark"));
+  if (btnThemeLight) btnThemeLight.addEventListener("click", () => applyTheme("light"));
+
+  // Modal handlers
   const closeModalBtn = document.getElementById("closeModalBtn");
   const pdfModal = document.getElementById("pdfModal");
   if (closeModalBtn) closeModalBtn.addEventListener("click", closePdfModal);
@@ -300,11 +372,12 @@ function initEventListeners() {
     });
   }
 
+  // Clear cache & reset button
   const clearCacheBtn = document.getElementById("clearCacheBtn");
   if (clearCacheBtn) {
     clearCacheBtn.addEventListener("click", () => {
       localStorage.clear();
-      showToast("Local cache cleared!", "fa-circle-check");
+      showToast("App cache cleared successfully!", "fa-circle-check");
       setTimeout(() => window.location.reload(), 1000);
     });
   }
