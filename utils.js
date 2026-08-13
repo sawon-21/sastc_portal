@@ -99,12 +99,18 @@ export function openPdfModal(url, title, textContentBase64 = null) {
     if (modalFooter) modalFooter.style.display = "flex";
   }
 
+  const bottomNav = document.querySelector(".bottom-nav");
+  if (bottomNav) bottomNav.classList.add("nav-hidden");
+
   modal.classList.add("active");
 }
 
 export function closePdfModal() {
   const modal = document.getElementById("pdfModal");
   const pdfFrame = document.getElementById("pdfFrame");
+  const bottomNav = document.querySelector(".bottom-nav");
+  if (bottomNav) bottomNav.classList.remove("nav-hidden");
+
   if (modal) modal.classList.remove("active");
   if (pdfFrame) pdfFrame.src = "about:blank";
 }

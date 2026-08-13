@@ -41,7 +41,7 @@ let masterDataset = [];
 let deferredPrompt = null;
 
 // DOM Element Handles
-let searchInput, clearBtn, noticeList, resultList, installBtn;
+let searchInput, clearBtn, noticeList, resultList;
 
 let sastcNoticesData = [];
 
@@ -51,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
   noticeList = document.getElementById("noticeList");
   const sastcNoticeList = document.getElementById("sastcNoticeList");
   resultList = document.getElementById("resultList");
-  installBtn = document.getElementById("installBtn");
 
   initDeptPreference();
 
@@ -334,28 +333,25 @@ function initEventListeners() {
     });
   }
 
-  const clearCacheBtn = document.getElementById("clearCacheBtn");
-  if (clearCacheBtn) {
-    clearCacheBtn.addEventListener("click", () => {
-      localStorage.clear();
-      showToast("App cache cleared!");
-      setTimeout(() => window.location.reload(), 800);
-    });
-  }
 
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (installBtn) installBtn.style.display = "flex";
-  });
-
-  if (installBtn) {
-    installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") installBtn.style.display = "none";
-      deferredPrompt = null;
-    });
+  const bottomNav = document.querySelector(".bottom-nav");
+  let lastScrollY = window.scrollY;
+  window.addEventListener("scroll", () => {
+    if (!bottomNav) return;
+    if (window.scrollY > lastScrollY && window.scrollY > 50) {
+      bottomNav.classList.add("nav-hidden");
+    } else {
+      bottomNav.classList.remove("nav-hidden");
+    }
+    lastScrollY = window.scrollY;
+  }, { passive: true });
+  const headerOfflineIcon = document.getElementById("headerOfflineIcon");
+  function updateOnlineStatus() {
+    if (headerOfflineIcon) {
+      headerOfflineIcon.style.display = navigator.onLine ? "none" : "inline-flex";
+    }
   }
+  window.addEventListener("online", updateOnlineStatus);
+  window.addEventListener("offline", updateOnlineStatus);
+  updateOnlineStatus();
 }

@@ -728,6 +728,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   opacity: 0;
+  pointer-events: none;
   transition: all 0.25s ease;
   z-index: 1000;
   display: flex;
@@ -819,3 +820,20 @@ body {
 .social-link:hover { background: var(--border-color); }
 .social-link.fb i { color: #1877F2; font-size: 16px; }
 .social-link.gh i { color: #333; font-size: 16px; }
+
+.header-offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-red);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.bottom-nav.nav-hidden {
+  transform: translateY(120px) !important;
+}

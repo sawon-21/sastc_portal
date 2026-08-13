@@ -30,20 +30,17 @@
         <img src="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" alt="Portal Logo" id="logoImg">
       </div>
       <div>
-        <h1 class="brand-title">SASTC <span>PORTAL</span></h1>
+        <h1 class="brand-title" style="white-space: nowrap;">SASTC <span style="display: inline-block;">PORTAL</span></h1>
       </div>
     </div>
     <div class="header-actions">
+      <div id="headerOfflineIcon" class="header-offline" style="display: none;">
+        <i class="fa-solid fa-cloud-arrow-down"></i> Offline
+      </div>
     </div>
   </header>
 
   <div class="app-container">
-    <!-- Offline Banner -->
-    <div id="offlineBanner" class="offline-banner" style="display: none;">
-      <i class="fa-solid fa-wifi"></i>
-      <span>Offline Mode — Showing Cached Notices</span>
-    </div>
-
     <!-- TAB 1: HOME VIEW -->
     <section id="view-home" class="tab-view active">
       <!-- Highlight Card -->
@@ -119,23 +116,6 @@
             <option value="AG">Agriculture (AG)</option>
             <option value="BBA">Business Admin (BBA)</option>
           </select>
-        </div>
-      </div>
-
-      <!-- App Customization & Cache Settings -->
-      <div class="settings-card">
-        <div class="settings-header">
-          <i class="fa-solid fa-hard-drive"></i>
-          <h3>Data & Storage</h3>
-        </div>
-
-        <div class="setting-item flex-col">
-          <button type="button" id="installBtn" class="setting-action-btn" style="display: none;">
-            <i class="fa-solid fa-download"></i> Install Portal App
-          </button>
-          <button type="button" id="clearCacheBtn" class="setting-action-btn danger">
-            <i class="fa-solid fa-trash-can"></i> Clear Local Cache
-          </button>
         </div>
       </div>
 
