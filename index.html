@@ -2,13 +2,13 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>SASTC Portal</title>
 
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#0b1329" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="SASTC Portal" />
   <meta name="description" content="SASTC Portal – HSTU Sync. Smart Notice Board for SASTC." />
   
@@ -26,97 +26,209 @@
 </head>
 
 <body>
-  <header>
-    <div class="header-content">
-      <div class="title-area">
-        <div class="logo-icon">
-          <img src="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" alt="SASTC Logo" class="logo-img" id="logoImg">
-        </div>
-        <div>
-          <h1>
-            SASTC Portal
-            <small class="subtitle-sync">– (HSTU Sync)</small>
-          </h1>     
-          <p>
-            Developed by 
-            <a href="https://www.facebook.com/mehedialhasansawon" target="_blank" rel="noopener noreferrer">
-              <i class="fa-brands fa-facebook"></i> Mehedi Al Hasan Sawon
-            </a>
-          </p>
-        </div>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="logo-icon">
+        <img src="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" alt="SASTC Logo" id="logoImg">
       </div>
-      
-      <button type="button" id="installBtn" class="btn-install" style="display: none;">
-        <i class="fa-solid fa-download"></i> Install App
+      <div>
+        <h1 class="brand-title">SASTC <span>PORTAL</span></h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="icon-btn" id="topSearchTrigger" title="Search">
+        <i class="fa-solid fa-magnifying-glass"></i>
       </button>
     </div>
   </header>
-<marquee behavior="scroll" direction="left" scrollamount="5" class="marquee">
-        📢 HSTU-এর নোটিশ ও ফলাফলের সাথে সমন্বয় করে SASTC-এর জন্য কাস্টমাইজ করা এই পোর্টালে সর্বশেষ নোটিশ, পরীক্ষার সময়সূচি, ক্লাস রুটিন ও ফলাফল একসাথে পাবেন। 🚧 পোর্টালটির উন্নয়ন কাজ এখনও চলমান।
-      </marquee>
-  <div class="container">
+
+  <!-- Marquee Announcement -->
+  <div class="announcement-banner">
+    <i class="fa-solid fa-bullhorn"></i>
+    <marquee behavior="scroll" direction="left" scrollamount="5" class="marquee">
+      Stay Informed with HSTU News & Result Updates • SASTC Academic Portal Sync
+    </marquee>
+  </div>
+
+  <div class="app-container">
     <!-- Offline Indicator Banner -->
     <div id="offlineBanner" class="offline-banner" style="display: none;">
       <i class="fa-solid fa-wifi"></i>
       <span>Offline Mode — Displaying cached notices</span>
     </div>
 
-    <div class="controls">
-      <div class="search-wrapper" role="search" aria-label="Search notices">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input
-          type="text"
-          id="searchInput"
-          class="search-input"
-          placeholder="Search notices across all departments..."
-          aria-label="Search notices by title, department, category, or date"
-        >
-        <button type="button" id="clearBtn" class="clear-btn" aria-label="Clear search">
-          <i class="fa-solid fa-xmark"></i>
+    <!-- VIEW 1: HOME -->
+    <section id="view-home" class="tab-view active">
+      <!-- Hero Featured Card -->
+      <div class="hero-card" id="heroLatestCard">
+        <div class="hero-bg-icon"><i class="fa-solid fa-file-contract"></i></div>
+        <div class="hero-badge"><i class="fa-solid fa-star"></i> Featured Highlight</div>
+        <h3 class="hero-title" id="heroTitle">Latest Result Announcement</h3>
+        <p class="hero-desc" id="heroDesc">Fetching latest results and examination schedules...</p>
+        <span class="hero-date" id="heroDate"><i class="fa-regular fa-clock"></i> Recent</span>
+        
+        <div class="hero-actions">
+          <button type="button" class="btn-primary" id="heroBtnView">
+            <i class="fa-solid fa-link"></i> View Online
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-counter">
+        <span>Showing: <strong id="homeNoticeCount">0</strong> Updates</span>
+      </div>
+
+      <!-- Quick Feature Cards Grid -->
+      <div class="quick-grid">
+        <div class="grid-card card-green" id="btnGoAcademic">
+          <div class="grid-card-icon"><i class="fa-solid fa-bullhorn"></i></div>
+          <h4>Academic Announcements</h4>
+          <p id="academicQuickSub">HSTU Routine & Exam Notices</p>
+        </div>
+
+        <div class="grid-card card-yellow" id="btnGoReports">
+          <div class="grid-card-icon"><i class="fa-solid fa-file-signature"></i></div>
+          <h4>Recent Reports</h4>
+          <ul class="recent-list" id="recentReportsList">
+            <li>Loading recent updates...</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: NOTICE -->
+    <section id="view-notice" class="tab-view">
+      <div class="controls">
+        <div class="search-wrapper" role="search" aria-label="Search notices">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Search notices across departments..."
+            aria-label="Search notices"
+          >
+          <button type="button" id="clearBtn" class="clear-btn" aria-label="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Department Filter Pills -->
+      <div class="dept-tabs" id="deptTabs" aria-label="Department filters">
+        <button type="button" class="dept-btn active" data-dept="SASTC">
+          <i class="fa-solid fa-microchip"></i>
+          <span>SASTC</span>
+          <span class="tab-count" id="badge-SASTC" style="display:none;">0</span>
+        </button>
+        <button type="button" class="dept-btn" data-dept="CSE">
+          <i class="fa-solid fa-code"></i>
+          <span>CSE</span>
+          <span class="tab-count" id="badge-CSE" style="display:none;">0</span>
+        </button>
+        <button type="button" class="dept-btn" data-dept="AG">
+          <i class="fa-solid fa-wheat-awn"></i>
+          <span>AG</span>
+          <span class="tab-count" id="badge-AG" style="display:none;">0</span>
+        </button>
+        <button type="button" class="dept-btn" data-dept="BBA">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>BBA</span>
+          <span class="tab-count" id="badge-BBA" style="display:none;">0</span>
         </button>
       </div>
-    </div>
 
-    <!-- Department Navigation Tabs -->
-    <div class="dept-tabs" id="deptTabs" aria-label="Department filters">
-      <button type="button" class="dept-btn" data-dept="RESULT" aria-pressed="false">
-        <i class="fa-solid fa-square-poll-vertical"></i>
-        <span class="tab-label">RESULT</span>
-        <span class="tab-count" id="badge-RESULT" style="display:none;">0</span>
-      </button>
-      <button type="button" class="dept-btn" data-dept="SASTC" aria-pressed="false">
-        <i class="fa-solid fa-microchip"></i>
-        <span class="tab-label">SASTC</span>
-        <span class="tab-count" id="badge-SASTC" style="display:none;">0</span>
-      </button>
-      <button type="button" class="dept-btn" data-dept="CSE" aria-pressed="false">
-        <i class="fa-solid fa-code"></i>
-        <span class="tab-label">CSE</span>
-        <span class="tab-count" id="badge-CSE" style="display:none;">0</span>
-      </button>
-      <button type="button" class="dept-btn" data-dept="AG" aria-pressed="false">
-        <i class="fa-solid fa-wheat-awn"></i>
-        <span class="tab-label">Agriculture</span>
-        <span class="tab-count" id="badge-AG" style="display:none;">0</span>
-      </button>
-      <button type="button" class="dept-btn" data-dept="BBA" aria-pressed="false">
-        <i class="fa-solid fa-chart-line"></i>
-        <span class="tab-label">BBA</span>
-        <span class="tab-count" id="badge-BBA" style="display:none;">0</span>
-      </button>
-    </div>
-
-    <div class="stats-bar">
-      <span><i class="fa-regular fa-file-lines"></i> Showing: <strong id="noticeCount">0</strong></span>
-    </div>
-
-    <div id="noticeList" class="notice-list" aria-live="polite">
-      <div class="state-box">
-        <i class="fa-solid fa-circle-notch spinner"></i>
-        <span>Loading notices...</span>
+      <div class="stats-bar">
+        <span><i class="fa-regular fa-file-lines"></i> Notices Found: <strong id="noticeCount">0</strong></span>
       </div>
-    </div>
+
+      <!-- Notice List Container -->
+      <div id="noticeList" class="notice-list" aria-live="polite">
+        <div class="state-box">
+          <i class="fa-solid fa-circle-notch spinner"></i>
+          <span>Loading notices...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: RESULT -->
+    <section id="view-result" class="tab-view">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-square-poll-vertical"></i> Academic Results</h2>
+        <p>Published examination results & grade sheets</p>
+      </div>
+
+      <div id="resultList" class="notice-list">
+        <div class="state-box">
+          <i class="fa-solid fa-circle-notch spinner"></i>
+          <span>Loading results...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: PROFILE -->
+    <section id="view-profile" class="tab-view">
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <i class="fa-solid fa-user-graduate"></i>
+        </div>
+        <h3 class="profile-name">SASTC Student Portal</h3>
+        <p class="profile-dept">Hajee Mohammad Danesh Science and Technology University</p>
+      </div>
+
+      <div class="settings-group">
+        <h4><i class="fa-solid fa-circle-info"></i> Portal Information</h4>
+        <div class="info-row">
+          <span>Developer</span>
+          <strong>Mehedi Al Hasan Sawon</strong>
+        </div>
+        <div class="info-row">
+          <span>Sync Status</span>
+          <strong class="text-success"><i class="fa-solid fa-circle-check"></i> HSTU Live</strong>
+        </div>
+        <div class="info-row">
+          <span>App Version</span>
+          <strong>v2.0.0 (UI Redesign)</strong>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h4><i class="fa-solid fa-sliders"></i> Actions & Options</h4>
+        <button type="button" id="installBtn" class="profile-action-btn" style="display: none;">
+          <i class="fa-solid fa-download"></i> Install App (PWA)
+        </button>
+        <button type="button" id="clearCacheBtn" class="profile-action-btn danger">
+          <i class="fa-solid fa-trash-can"></i> Clear Local Cache
+        </button>
+      </div>
+    </section>
   </div>
+
+  <!-- 4-TAB BOTTOM NAVIGATION BAR -->
+  <nav class="bottom-nav">
+    <button type="button" class="nav-item active" data-tab="home">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </button>
+
+    <button type="button" class="nav-item" data-tab="notice">
+      <i class="fa-solid fa-bell"></i>
+      <span>Notice</span>
+      <span class="nav-badge" id="navNoticeBadge" style="display:none;">0</span>
+    </button>
+
+    <button type="button" class="nav-item" data-tab="result">
+      <i class="fa-solid fa-chart-column"></i>
+      <span>Result</span>
+      <span class="nav-badge" id="badge-RESULT" style="display:none;">0</span>
+    </button>
+
+    <button type="button" class="nav-item" data-tab="profile">
+      <i class="fa-solid fa-user"></i>
+      <span>Profile</span>
+    </button>
+  </nav>
 
   <!-- PDF Preview Modal -->
   <div id="pdfModal" class="modal-overlay" role="dialog" aria-modal="true">
@@ -131,7 +243,7 @@
         <iframe id="pdfFrame" src="about:blank" title="PDF Notice Viewer"></iframe>
       </div>
       <div class="modal-footer">
-        <span class="modal-footer-text">Opening in embedded viewer</span>
+        <span class="modal-footer-text">Embedded Viewer</span>
         <a id="modalDirectLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-direct">
           <span>Open Full PDF</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
@@ -145,7 +257,7 @@
     <span id="toastMsg">Link copied to clipboard</span>
   </div>
 
-  <!-- Main ES6 Application Entry Point -->
+  <!-- Main Controller -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
