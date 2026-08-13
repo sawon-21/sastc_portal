@@ -1,114 +1,97 @@
 <!DOCTYPE html>
-<html lang="bn" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>SASTC Portal</title>
 
-  <meta name="theme-color" content="#0b1329" />
+  <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="SASTC Portal" />
-  <meta name="description" content="SASTC Portal – HSTU Sync. Smart Notice Board for SASTC." />
   
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" />
 
-  <!-- Google Fonts & Font Awesome -->
+  <!-- Google Fonts & Font Awesome Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <!-- Header -->
+  <!-- Sticky Top App Header -->
   <header class="app-header">
     <div class="header-brand">
       <div class="logo-icon">
-        <img src="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" alt="SASTC Logo" id="logoImg">
+        <img src="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" alt="Portal Logo" id="logoImg">
       </div>
       <div>
         <h1 class="brand-title">SASTC <span>PORTAL</span></h1>
       </div>
     </div>
     <div class="header-actions">
-      <!-- Quick Theme Toggle -->
-      <button type="button" class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+      <button type="button" class="icon-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme">
         <i class="fa-solid fa-moon" id="themeIcon"></i>
       </button>
-      <button type="button" class="icon-btn" id="topSearchTrigger" title="Search Notices" aria-label="Search">
+      <button type="button" class="icon-btn" id="topSearchTrigger" title="Search" aria-label="Search">
         <i class="fa-solid fa-magnifying-glass"></i>
       </button>
     </div>
   </header>
 
-  <!-- Marquee Announcement -->
-  <div class="announcement-banner">
-    <i class="fa-solid fa-bullhorn"></i>
-    <marquee behavior="scroll" direction="left" scrollamount="5" class="marquee">
-      HSTU-এর নোটিশ ও ফলাফলের সাথে সমন্বয় করে SASTC-এর জন্য কাস্টমাইজ করা এই পোর্টালে সর্বশেষ নোটিশ, পরীক্ষার সময়সূচি ও ফলাফল একসাথে পাবেন।
-    </marquee>
-  </div>
-
   <div class="app-container">
-    <!-- Offline Indicator Banner -->
+    <!-- Offline Banner -->
     <div id="offlineBanner" class="offline-banner" style="display: none;">
       <i class="fa-solid fa-wifi"></i>
-      <span>Offline Mode — Displaying cached notices</span>
+      <span>Offline Mode — Showing Cached Notices</span>
     </div>
 
-    <!-- VIEW 1: HOME -->
+    <!-- TAB 1: HOME VIEW -->
     <section id="view-home" class="tab-view active">
-      <!-- Hero Featured Card -->
+      <!-- Highlight Card -->
       <div class="hero-card" id="heroLatestCard">
-        <div class="hero-bg-icon"><i class="fa-solid fa-file-contract"></i></div>
-        <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Latest Highlight</div>
-        <h3 class="hero-title" id="heroTitle">Academic Announcement</h3>
-        <p class="hero-desc" id="heroDesc">Fetching latest notices and schedules...</p>
+        <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Latest Notice</div>
+        <h3 class="hero-title" id="heroTitle">Academic Notice</h3>
+        <p class="hero-desc" id="heroDesc">Loading latest department notice...</p>
         <span class="hero-date" id="heroDate"><i class="fa-regular fa-clock"></i> Recent</span>
         
         <div class="hero-actions">
           <button type="button" class="btn-primary" id="heroBtnView">
-            <i class="fa-solid fa-file-pdf"></i> View Notice
+            <i class="fa-solid fa-file-pdf"></i> Read Document
           </button>
         </div>
       </div>
 
-      <!-- Quick Action Cards Grid -->
+      <!-- Quick Shortcuts Grid -->
       <div class="quick-grid">
-        <div class="grid-card card-blue" id="btnGoNotices">
+        <div class="grid-card card-indigo" id="btnGoNotices">
           <div class="grid-card-icon"><i class="fa-solid fa-bell"></i></div>
-          <h4>Department Notices</h4>
-          <p id="deptNoticeSub">Filtered by your selected department</p>
+          <h4>Notices</h4>
+          <p id="deptNoticeSub">Filtered for your department</p>
         </div>
 
-        <div class="grid-card card-green" id="btnGoResults">
+        <div class="grid-card card-emerald" id="btnGoResults">
           <div class="grid-card-icon"><i class="fa-solid fa-square-poll-vertical"></i></div>
-          <h4>SASTC Results</h4>
-          <p>Official examination grade sheets</p>
+          <h4>Results</h4>
+          <p>Academic grade sheets</p>
         </div>
-      </div>
-
-      <div class="stats-counter">
-        <span>Showing: <strong id="homeNoticeCount">0</strong> Total Updates</span>
       </div>
     </section>
 
-    <!-- VIEW 2: NOTICE -->
+    <!-- TAB 2: NOTICE VIEW -->
     <section id="view-notice" class="tab-view">
       <div class="controls">
-        <div class="search-wrapper" role="search" aria-label="Search notices">
+        <div class="search-wrapper">
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
           <input
             type="text"
             id="searchInput"
             class="search-input"
-            placeholder="Search notices by title, department..."
+            placeholder="Search notices..."
             aria-label="Search notices"
           >
           <button type="button" id="clearBtn" class="clear-btn" aria-label="Clear search">
@@ -118,35 +101,23 @@
       </div>
 
       <!-- Department Filter Pills -->
-      <div class="dept-tabs" id="deptTabs" aria-label="Department filters">
-        <button type="button" class="dept-btn" data-dept="ALL">
+      <div class="dept-tabs" id="deptTabs">
+        <button type="button" class="dept-btn active" data-dept="ALL">
           <i class="fa-solid fa-layer-group"></i>
-          <span>ALL</span>
-        </button>
-        <button type="button" class="dept-btn active" data-dept="SASTC">
-          <i class="fa-solid fa-microchip"></i>
-          <span>SASTC</span>
-          <span class="tab-count" id="badge-SASTC" style="display:none;">0</span>
+          <span>All</span>
         </button>
         <button type="button" class="dept-btn" data-dept="CSE">
           <i class="fa-solid fa-code"></i>
           <span>CSE</span>
-          <span class="tab-count" id="badge-CSE" style="display:none;">0</span>
         </button>
         <button type="button" class="dept-btn" data-dept="AG">
           <i class="fa-solid fa-wheat-awn"></i>
           <span>Agriculture</span>
-          <span class="tab-count" id="badge-AG" style="display:none;">0</span>
         </button>
         <button type="button" class="dept-btn" data-dept="BBA">
           <i class="fa-solid fa-chart-line"></i>
           <span>BBA</span>
-          <span class="tab-count" id="badge-BBA" style="display:none;">0</span>
         </button>
-      </div>
-
-      <div class="stats-bar">
-        <span><i class="fa-regular fa-file-lines"></i> Notices Found: <strong id="noticeCount">0</strong></span>
       </div>
 
       <!-- Notice List Container -->
@@ -158,17 +129,8 @@
       </div>
     </section>
 
-    <!-- VIEW 3: RESULT (SASTC Filter) -->
+    <!-- TAB 3: RESULT VIEW -->
     <section id="view-result" class="tab-view">
-      <div class="section-header">
-        <h2><i class="fa-solid fa-square-poll-vertical"></i> SASTC Results</h2>
-        <p>Published examination results & academic transcripts</p>
-      </div>
-
-      <div class="stats-bar">
-        <span><i class="fa-solid fa-square-check"></i> Filter: <strong>SASTC Results Only</strong></span>
-      </div>
-
       <div id="resultList" class="notice-list">
         <div class="state-box">
           <i class="fa-solid fa-circle-notch spinner"></i>
@@ -177,34 +139,40 @@
       </div>
     </section>
 
-    <!-- VIEW 4: SETTINGS (Replaces Profile) -->
+    <!-- TAB 4: SETTINGS VIEW -->
     <section id="view-settings" class="tab-view">
       <div class="settings-card">
         <div class="settings-header">
           <i class="fa-solid fa-sliders"></i>
-          <h3>Portal Settings</h3>
+          <h3>Department Preferences</h3>
         </div>
 
-        <!-- Setting 1: My Department Selector -->
+        <!-- Department Selection Dropdown -->
         <div class="setting-item">
           <div class="setting-info">
-            <label for="deptPreferenceSelect"><strong>My Department Preference</strong></label>
-            <p>Show notices & results tailored to your department</p>
+            <label for="deptPreferenceSelect"><strong>Selected Department</strong></label>
+            <p>Show notices & results strictly for your department</p>
           </div>
           <select id="deptPreferenceSelect" class="setting-select">
             <option value="ALL">Show All Departments</option>
-            <option value="SASTC" selected>SASTC Department</option>
-            <option value="CSE">CSE (Computer Science)</option>
-            <option value="AG">Faculty of Agriculture</option>
-            <option value="BBA">BBA (Business Admin)</option>
+            <option value="CSE">Computer Science (CSE)</option>
+            <option value="AG">Agriculture (AG)</option>
+            <option value="BBA">Business Admin (BBA)</option>
           </select>
         </div>
+      </div>
 
-        <!-- Setting 2: Theme Switcher -->
+      <!-- App Customization & Cache Settings -->
+      <div class="settings-card">
+        <div class="settings-header">
+          <i class="fa-solid fa-paint-roller"></i>
+          <h3>Appearance & Data</h3>
+        </div>
+
         <div class="setting-item">
           <div class="setting-info">
-            <strong>App Appearance</strong>
-            <p>Switch between dark and light color themes</p>
+            <strong>Color Theme</strong>
+            <p>Switch between light and dark visual themes</p>
           </div>
           <div class="theme-switch-group">
             <button type="button" class="btn-theme-opt" id="btnThemeDark"><i class="fa-solid fa-moon"></i> Dark</button>
@@ -212,40 +180,19 @@
           </div>
         </div>
 
-        <!-- Setting 3: App Action Buttons -->
         <div class="setting-item flex-col">
           <button type="button" id="installBtn" class="setting-action-btn" style="display: none;">
-            <i class="fa-solid fa-download"></i> Install Web App (PWA)
+            <i class="fa-solid fa-download"></i> Install Portal App
           </button>
           <button type="button" id="clearCacheBtn" class="setting-action-btn danger">
-            <i class="fa-solid fa-trash-can"></i> Clear Local Cache & Reset
+            <i class="fa-solid fa-trash-can"></i> Clear Local Cache
           </button>
-        </div>
-      </div>
-
-      <!-- App Info Card -->
-      <div class="settings-card">
-        <div class="settings-header">
-          <i class="fa-solid fa-circle-info"></i>
-          <h3>About SASTC Portal</h3>
-        </div>
-        <div class="info-row">
-          <span>Developer</span>
-          <strong><a href="https://www.facebook.com/mehedialhasansawon" target="_blank" rel="noopener">Mehedi Al Hasan Sawon</a></strong>
-        </div>
-        <div class="info-row">
-          <span>HSTU Live Sync</span>
-          <strong class="text-success"><i class="fa-solid fa-circle-check"></i> Connected</strong>
-        </div>
-        <div class="info-row">
-          <span>Version</span>
-          <strong>v2.2.0 (Mobile & Multi-Theme)</strong>
         </div>
       </div>
     </section>
   </div>
 
-  <!-- 4-TAB BOTTOM NAVIGATION BAR -->
+  <!-- Floating Rounded Bottom Navigation Bar -->
   <nav class="bottom-nav">
     <button type="button" class="nav-item active" data-tab="home">
       <i class="fa-solid fa-house"></i>
@@ -261,7 +208,6 @@
     <button type="button" class="nav-item" data-tab="result">
       <i class="fa-solid fa-chart-column"></i>
       <span>Result</span>
-      <span class="nav-badge" id="badge-RESULT" style="display:none;">0</span>
     </button>
 
     <button type="button" class="nav-item" data-tab="settings">
@@ -283,9 +229,8 @@
         <iframe id="pdfFrame" src="about:blank" title="PDF Notice Viewer"></iframe>
       </div>
       <div class="modal-footer">
-        <span class="modal-footer-text">Embedded Viewer</span>
-        <a id="modalDirectLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-direct">
-          <span>Open Full PDF</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        <a id="modalDirectLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary">
+          <span>Open Direct PDF</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
     </div>
@@ -297,7 +242,6 @@
     <span id="toastMsg">Link copied to clipboard</span>
   </div>
 
-  <!-- Main ES6 Controller -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
