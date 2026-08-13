@@ -48,7 +48,7 @@
     "id": "sastc-006",
     "title": "General Academic Notice",
     "desc": "Important information for all students and faculty members. Please review the notice carefully and follow the instructions provided. <b>Attendance and academic activities will continue according to the published schedule.</b> <i>Please check the official notice link for complete details.</i> <a href=\"https://example.com/notice\">View Full Notice</a> <img src=\"https://placehold.co/800x450/png?text=General+Notice\" alt=\"General Notice Preview\" />",
-    "date": "August 13, 2026",
+    "date": "August 14, 2026",
     "isResult": false,
     "pdfUrl": "",
     "deptCode": "SASTC"
@@ -57,7 +57,7 @@
     "id": "sastc-007",
     "title": "Important Notice",
     "desc": "<img src=\"https://placehold.co/800x450/png?text=Important+Notice\" alt=\"Important Notice Preview\" />",
-    "date": "August 13, 2026",
+    "date": "August 15, 2026",
     "isResult": false,
     "pdfUrl": "",
     "deptCode": "SASTC"
