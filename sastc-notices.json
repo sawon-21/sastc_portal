@@ -58,7 +58,7 @@
     "title": "Important Notice",
     "desc": "<img src=\"https://placehold.co/800x450/png?text=Important+Notice\" alt=\"Important Notice Preview\" />",
     "date": "August 15, 2026",
-    "isResult": false,
+    "isResult": true,
     "pdfUrl": "",
     "deptCode": "SASTC"
   }
