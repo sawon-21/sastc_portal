@@ -2,7 +2,7 @@
  * Standalone Service Worker for Offline Caching
  */
 
-const CACHE_NAME = 'sastc-portal-v9';
+const CACHE_NAME = 'sastc-portal-v10';
 
 const ASSETS_TO_CACHE = [
   './',
