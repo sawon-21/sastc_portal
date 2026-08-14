@@ -228,7 +228,7 @@ function renderNotices() {
 
   // Apply Selected Department Preference
   if (deptPreference !== "ALL") {
-    filtered = filtered.filter(item => item._deptCode === deptPreference);
+    filtered = filtered.filter(item => item._deptCode === deptPreference || item._deptCode === "SASTC");
   }
 
   if (filtered.length === 0) {
@@ -245,19 +245,22 @@ function renderNotices() {
 }
 
 /**
- * Render Results (Strictly filtered for selected department)
+ * Render Results (Filtered with SASTC & selected department support)
  */
 function renderResultsView() {
   if (!resultList) return;
 
-  // Filter items that are results
+  // 1. Get all examination result notices
   let results = masterDataset.filter(item => item._isResult);
 
-  // Filter based on user's selected department if not 'ALL'
+  // 2. Filter based on SASTC / user's selected department
   if (deptPreference !== "ALL") {
     results = results.filter(item => {
       const text = `${item.title || ''} ${item.department || ''} ${item.category || ''} ${item._deptCode || ''}`.toUpperCase();
-      return new RegExp(`\\b${deptPreference}\\b`, "i").test(text);
+      const matchesDept = new RegExp(`\\b${deptPreference}\\b`, "i").test(text);
+      const isSastc = item._deptCode === "SASTC" || /\bSASTC\b/i.test(text);
+      
+      return matchesDept || isSastc;
     });
   }
 
@@ -265,7 +268,7 @@ function renderResultsView() {
     resultList.innerHTML = `
       <div class="state-box">
         <i class="fa-solid fa-square-poll-vertical"></i>
-        <span>No examination results published for ${deptPreference !== "ALL" ? deptPreference : "any department"}.</span>
+        <span>No SASTC / ${deptPreference} examination results published.</span>
       </div>
     `;
     return;
@@ -282,7 +285,7 @@ function createCardHTML(item, options = {}) {
   const displayBadge = isResult ? "RESULT" : (item._deptCode || detectDeptCode(`${item.department || ''} ${item.title || ''}`));
   const deptIcon = getDeptIcon(displayBadge);
 
-  // Added item.pdf for compatibility with result JSON format
+  // Added item.pdf for result JSON compatibility
   const rawLink = item.pdf || item.url || item.pdf_url || item.link || item.pdfUrl || "";
   const isTextOnly = !rawLink || rawLink === "#";
   const pdfUrl = isTextOnly ? "#" : formatPdfUrl(rawLink);
