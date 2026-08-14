@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   searchInput = document.getElementById("searchInput");
   clearBtn = document.getElementById("clearBtn");
   noticeList = document.getElementById("noticeList");
+  const sastcNoticeList = document.getElementById("sastcNoticeList");
   resultList = document.getElementById("resultList");
 
   initDeptPreference();
@@ -162,8 +163,7 @@ function renderHomeView() {
     if (heroDate) heroDate.innerHTML = `<i class="fa-regular fa-clock"></i> ${heroItem.date || 'Recent'}`;
 
     if (heroBtnView) {
-      const heroLink = heroItem.pdf || heroItem.url || heroItem.pdf_url || heroItem.link || heroItem.pdfUrl || "#";
-      const url = formatPdfUrl(heroLink);
+      const url = formatPdfUrl(heroItem.pdf || heroItem.url || heroItem.pdf_url || heroItem.link || heroItem.pdfUrl || "#");
       heroBtnView.onclick = (e) => {
         triggerHaptic();
         handleNoticeClick(e, url, heroItem.title);
@@ -228,7 +228,7 @@ function renderNotices() {
 
   // Apply Selected Department Preference
   if (deptPreference !== "ALL") {
-    filtered = filtered.filter(item => item._deptCode === deptPreference || item._deptCode === "SASTC");
+    filtered = filtered.filter(item => item._deptCode === deptPreference);
   }
 
   if (filtered.length === 0) {
@@ -245,22 +245,22 @@ function renderNotices() {
 }
 
 /**
- * Render Results (Filtered with SASTC & selected department support)
+ * Render Results (Strictly filtered for selected department)
  */
 function renderResultsView() {
   if (!resultList) return;
 
-  // 1. Get all examination result notices
-  let results = masterDataset.filter(item => item._isResult);
+  let results = masterDataset.filter(item => {
+    if (!item._isResult) return false;
+    const text = `${item.title || ''} ${item.department || ''} ${item.category || ''}`.toUpperCase();
+    return /\bSASTC\b/i.test(text);
+  });
 
-  // 2. Filter based on SASTC / user's selected department
+  // Filter based on user's selected department
   if (deptPreference !== "ALL") {
     results = results.filter(item => {
-      const text = `${item.title || ''} ${item.department || ''} ${item.category || ''} ${item._deptCode || ''}`.toUpperCase();
-      const matchesDept = new RegExp(`\\b${deptPreference}\\b`, "i").test(text);
-      const isSastc = item._deptCode === "SASTC" || /\bSASTC\b/i.test(text);
-      
-      return matchesDept || isSastc;
+      const text = `${item.title || ''} ${item.department || ''} ${item.category || ''}`.toUpperCase();
+      return new RegExp(`\\b${deptPreference}\\b`, "i").test(text);
     });
   }
 
@@ -268,7 +268,7 @@ function renderResultsView() {
     resultList.innerHTML = `
       <div class="state-box">
         <i class="fa-solid fa-square-poll-vertical"></i>
-        <span>No SASTC / ${deptPreference} examination results published.</span>
+        <span>No SASTC examination results published for ${deptPreference}.</span>
       </div>
     `;
     return;
@@ -285,7 +285,6 @@ function createCardHTML(item, options = {}) {
   const displayBadge = isResult ? "RESULT" : (item._deptCode || detectDeptCode(`${item.department || ''} ${item.title || ''}`));
   const deptIcon = getDeptIcon(displayBadge);
 
-  // Added item.pdf for result JSON compatibility
   const rawLink = item.pdf || item.url || item.pdf_url || item.link || item.pdfUrl || "";
   const isTextOnly = !rawLink || rawLink === "#";
   const pdfUrl = isTextOnly ? "#" : formatPdfUrl(rawLink);
@@ -376,7 +375,6 @@ function initEventListeners() {
     }
     lastScrollY = window.scrollY;
   }, { passive: true });
-
   const headerOfflineIcon = document.getElementById("headerOfflineIcon");
   function updateOnlineStatus() {
     if (headerOfflineIcon) {
