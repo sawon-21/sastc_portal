@@ -2,7 +2,7 @@
   {
     "id": "sastc-001",
     "title": "Welcome to SASTC Portal",
-    "desc": "Important guidelines and updates for <b>CSE</b> students. <img src='https://placehold.co/400x150' alt='Banner' style='margin-top:8px; border-radius:8px;'/>",
+    "desc": "<b>Welcome to the SASTC Student Portal.</b><br><br>This portal provides students with important notices, academic updates, examination information, departmental announcements, results, events, and other campus-related information.<br><br><b>বাংলা:</b> SASTC শিক্ষার্থী পোর্টালে আপনাকে স্বাগতম। এই পোর্টালের মাধ্যমে শিক্ষার্থীরা একাডেমিক নোটিশ, পরীক্ষার সময়সূচি, ফলাফল, বিভাগীয় ঘোষণা, বিভিন্ন অনুষ্ঠান এবং ক্যাম্পাসের গুরুত্বপূর্ণ আপডেট সহজেই জানতে পারবেন।<br><br>সকল শিক্ষার্থীকে নিয়মিত পোর্টালটি ভিজিট করে সর্বশেষ নোটিশ ও আপডেট দেখার জন্য অনুরোধ করা হচ্ছে।<img src='https://placehold.co/400x150' alt='SASTC Portal Banner' style='margin-top:8px; border-radius:8px;'/>",
     "date": "August 13, 2026",
     "isResult": false,
     "pdfUrl": "",
@@ -11,7 +11,7 @@
   {
     "id": "sastc-002",
     "title": "Annual Sports Event Registration",
-    "desc": "Please register your names for the upcoming annual sports event with your respective department heads by August 20th. <br><br> For details, <a href='https://example.com/sports' target='_blank'>check the official sports page</a>.",
+    "desc": "<b>Annual Sports Event Registration Notice</b><br><br>Students from all departments are invited to participate in the upcoming SASTC Annual Sports Event. Interested students should submit their names to their respective department heads by <b>August 20, 2026</b>.<br><br>Students may participate in the events arranged by the organizing committee. Participants are requested to provide accurate information during registration and follow all instructions provided by the department and sports committee.<br><br><b>বাংলা:</b> SASTC-এর বার্ষিক ক্রীড়া প্রতিযোগিতায় সকল বিভাগের শিক্ষার্থীদের অংশগ্রহণের জন্য আহ্বান জানানো হচ্ছে। আগ্রহী শিক্ষার্থীদের আগামী <b>২০ আগস্ট ২০২৬</b>-এর মধ্যে নিজ নিজ বিভাগীয় প্রধানের কাছে নাম জমা দিতে হবে।<br><br>নিবন্ধনের সময় শিক্ষার্থীদের সঠিক তথ্য প্রদান করতে হবে এবং ক্রীড়া কমিটি ও বিভাগীয় কর্তৃপক্ষের সকল নির্দেশনা যথাযথভাবে অনুসরণ করতে হবে।<br><br>বিস্তারিত তথ্যের জন্য <a href='https://example.com/sports' target='_blank'>official sports page</a> দেখুন।",
     "date": "August 12, 2026",
     "isResult": false,
     "pdfUrl": "",
@@ -20,7 +20,7 @@
   {
     "id": "sastc-003",
     "title": "Agriculture Field Trip Notification",
-    "desc": "All <b>B.Sc in Agriculture</b> students are requested to gather at the main gate for the scheduled field trip to the research farm. <a href='https://example.com/ag-trip'>Field Trip Guide</a>",
+    "desc": "<b>Field Trip Notification for B.Sc in Agriculture Students</b><br><br>All <b>B.Sc in Agriculture</b> students are informed that a field trip to the designated research farm has been scheduled as part of their practical and academic learning activities.<br><br>Students are requested to gather at the <b>main gate</b> at the time instructed by the department. Everyone must carry their student ID card and follow the instructions of the faculty members and trip coordinators throughout the visit.<br><br><b>বাংলা:</b> সকল <b>B.Sc in Agriculture</b> শিক্ষার্থীদের জানানো যাচ্ছে যে, ব্যবহারিক ও শিক্ষামূলক কার্যক্রমের অংশ হিসেবে নির্ধারিত গবেষণা খামারে একটি শিক্ষা সফরের আয়োজন করা হয়েছে।<br><br>সকল শিক্ষার্থীকে নির্ধারিত সময়ে কলেজের <b>মূল ফটকে</b> উপস্থিত হতে হবে। শিক্ষার্থীদের অবশ্যই স্টুডেন্ট আইডি কার্ড সঙ্গে রাখতে হবে এবং সফর চলাকালীন শিক্ষক ও সমন্বয়কারীদের নির্দেশনা মেনে চলতে হবে।<br><br><a href='https://example.com/ag-trip' target='_blank'>Field Trip Guide</a>",
     "date": "August 11, 2026",
     "isResult": false,
     "pdfUrl": "",
@@ -29,7 +29,7 @@
   {
     "id": "sastc-004",
     "title": "BBA Case Study Competition",
-    "desc": "The annual business case study competition will be held next week. Interested BBA students must form teams of three.",
+    "desc": "<b>Annual BBA Case Study Competition</b><br><br>The annual business case study competition will be held next week. Interested BBA students are encouraged to participate and demonstrate their analytical, communication, teamwork, and problem-solving skills.<br><br>Each team must consist of <b>three students</b>. Participants should form their teams and submit the required information to the BBA department within the announced registration period. Further instructions regarding the case, presentation format, judging criteria, and competition schedule will be communicated by the department.<br><br><b>বাংলা:</b> আগামী সপ্তাহে বার্ষিক BBA Case Study Competition অনুষ্ঠিত হবে। আগ্রহী BBA শিক্ষার্থীদের এই প্রতিযোগিতায় অংশগ্রহণের জন্য উৎসাহিত করা হচ্ছে। প্রতিযোগিতার মাধ্যমে শিক্ষার্থীরা বিশ্লেষণী দক্ষতা, যোগাযোগ দক্ষতা, দলগত কাজ এবং সমস্যা সমাধানের সক্ষমতা প্রদর্শনের সুযোগ পাবে।<br><br>প্রতিটি দলে <b>৩ জন শিক্ষার্থী</b> থাকতে হবে। আগ্রহী শিক্ষার্থীদের দল গঠন করে নির্ধারিত সময়ের মধ্যে BBA বিভাগে প্রয়োজনীয় তথ্য জমা দিতে হবে।",
     "date": "August 09, 2026",
     "isResult": false,
     "pdfUrl": "",
@@ -38,8 +38,17 @@
   {
     "id": "sastc-005",
     "title": "Campus Cleanliness Drive",
-    "desc": "Join the SASTC campus cleanliness drive this weekend. Open to all departments.",
+    "desc": "<b>SASTC Campus Cleanliness Drive</b><br><br>A campus-wide cleanliness drive will be organized this weekend to promote a clean, healthy, and environmentally friendly academic environment. Students, teachers, staff, and volunteers from all departments are encouraged to participate.<br><br>The campaign will include cleaning common areas, removing unnecessary waste, improving the cleanliness around classrooms and campus facilities, and creating awareness about responsible waste disposal.<br><br><b>বাংলা:</b> পরিচ্ছন্ন, স্বাস্থ্যকর ও পরিবেশবান্ধব শিক্ষার পরিবেশ নিশ্চিত করার লক্ষ্যে এই সপ্তাহান্তে SASTC ক্যাম্পাসে একটি বিশেষ পরিচ্ছন্নতা অভিযান পরিচালনা করা হবে। সকল বিভাগের শিক্ষার্থী, শিক্ষক, কর্মকর্তা-কর্মচারী ও স্বেচ্ছাসেবীদের এই কার্যক্রমে অংশগ্রহণের জন্য উৎসাহিত করা হচ্ছে।<br><br>অভিযানের আওতায় ক্যাম্পাসের বিভিন্ন সাধারণ স্থান, শ্রেণিকক্ষের আশপাশ এবং অন্যান্য গুরুত্বপূর্ণ স্থান পরিষ্কার করা হবে। একইসঙ্গে সঠিকভাবে বর্জ্য ব্যবস্থাপনা ও ক্যাম্পাস পরিচ্ছন্ন রাখার বিষয়ে সচেতনতা তৈরি করা হবে।<br><br><b>সবার সহযোগিতায় একটি পরিচ্ছন্ন ক্যাম্পাস গড়ে তুলি।</b>",
     "date": "August 05, 2026",
+    "isResult": false,
+    "pdfUrl": "",
+    "deptCode": "SASTC"
+  },
+  {
+    "id": "sastc-006",
+    "title": "General Notice for All Students",
+    "desc": "<b>General Notice</b><br><br>All students of SASTC are hereby informed that they are required to remain updated with all official announcements issued by the college and their respective departments. Important information regarding classes, examinations, registration, academic activities, events, holidays, fees, results, and other institutional matters may be published through the official student portal.<br><br>Students are advised to check the portal regularly and carefully read every notice relevant to their department or academic program. Failure to follow an official notice within the specified deadline may result in inconvenience for the concerned student.<br><br>Students must also ensure that their personal and academic information submitted through official channels is accurate and up to date. Any issue or discrepancy should be reported to the appropriate department or college authority as soon as possible.<br><br><b>বাংলা:</b><br>সকল SASTC শিক্ষার্থীর অবগতির জন্য জানানো যাচ্ছে যে, কলেজ ও নিজ নিজ বিভাগ থেকে প্রকাশিত সকল গুরুত্বপূর্ণ নোটিশ ও ঘোষণা নিয়মিত অনুসরণ করা বাধ্যতামূলক। ক্লাস, পরীক্ষা, রেজিস্ট্রেশন, একাডেমিক কার্যক্রম, অনুষ্ঠান, ছুটি, ফি, ফলাফল এবং অন্যান্য প্রাতিষ্ঠানিক বিষয়ের গুরুত্বপূর্ণ তথ্য এই অফিসিয়াল স্টুডেন্ট পোর্টালের মাধ্যমে প্রকাশ করা হতে পারে।<br><br>সকল শিক্ষার্থীকে নিয়মিত পোর্টাল ভিজিট করে নিজেদের বিভাগ ও শিক্ষাক্রমের সাথে সম্পর্কিত নোটিশগুলো মনোযোগ সহকারে পড়ার জন্য অনুরোধ করা হচ্ছে। কোনো নোটিশে নির্ধারিত সময়সীমার মধ্যে প্রয়োজনীয় কার্যক্রম সম্পন্ন না করলে সংশ্লিষ্ট শিক্ষার্থী সমস্যার সম্মুখীন হতে পারেন।<br><br>শিক্ষার্থীদের অফিসিয়াল মাধ্যমে প্রদান করা ব্যক্তিগত ও একাডেমিক তথ্য সঠিক এবং হালনাগাদ রাখার জন্যও অনুরোধ করা হচ্ছে। কোনো তথ্যের ভুল বা অসঙ্গতি দেখা গেলে দ্রুত সংশ্লিষ্ট বিভাগ বা কলেজ কর্তৃপক্ষকে অবহিত করতে হবে।<br><br><b>নির্দেশক্রমে,<br>SASTC কর্তৃপক্ষ</b>",
+    "date": "August 14, 2026",
     "isResult": false,
     "pdfUrl": "",
     "deptCode": "SASTC"
