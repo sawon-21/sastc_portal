@@ -2,6 +2,10 @@
  * Utility functions for SASTC Portal
  */
 
+export function escapeJS(str) {
+  return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+}
+
 export function escapeHTML(str) {
   return String(str ?? "")
     .replace(/&/g, "&amp;")
@@ -38,7 +42,7 @@ export function formatPdfUrl(rawLink) {
   } else if (!url.startsWith("http://") && !url.startsWith("https://")) {
     url = "https://" + url;
   }
-  return url;
+  return url.replace(/'/g, "%27");
 }
 
 /**
@@ -75,7 +79,7 @@ export function openPdfModal(url, title, textContentBase64 = null) {
     if (modalFooter) modalFooter.style.display = "none";
     if (modalTextContent) {
       modalTextContent.style.display = "block";
-      modalTextContent.textContent = decodeURIComponent(textContentBase64);
+      modalTextContent.innerHTML = decodeURIComponent(textContentBase64);
     }
   } else {
     // Show PDF mode
@@ -226,13 +230,13 @@ export function getTagInfo(dateInput) {
   // Calculate full days passed
   const diffInDays = Math.floor(diffInHours / 24);
 
-  // 1 to 3 days ago
-  if (diffInDays >= 1 && diffInDays <= 3) {
+  // 1 to 7 days ago
+  if (diffInDays >= 1 && diffInDays <= 7) {
     const label = `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
     return { text: label, className: 'tag-recent' };
   }
 
-  // Older than 3 days -> No Tag
+  // Older than 7 days -> No Tag
   return null;
 }
 
@@ -248,4 +252,10 @@ export function formatDate(dateInput) {
     month: 'short',
     day: 'numeric'
   });
+}
+export function formatDateString(dateStr) {
+  if (!dateStr || dateStr === "N/A") return "N/A";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }

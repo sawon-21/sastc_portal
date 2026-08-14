@@ -11,7 +11,8 @@ import {
   getFilteredNotices 
 } from './filter.js';
 import { 
-  escapeHTML, 
+  escapeHTML,
+  escapeJS, 
   formatPdfUrl, 
   closePdfModal, 
   copyLink, 
@@ -19,7 +20,9 @@ import {
   handlePdfView, 
   debounce,
   initSecurityProtections,
-  showToast
+  showToast,
+  getTagInfo,
+  formatDateString
 } from './utils.js';
 
 window.handleNoticeClick = handleNoticeClick;
@@ -194,6 +197,14 @@ function renderHomeView() {
           `;
           return;
         }
+
+        // Sort by date, latest first
+        filteredSastc.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB - dateA;
+        });
+
         sastcNoticeList.innerHTML = filteredSastc.map(item => createCardHTML(item, { hideCopy: true })).join("");
       })
       .catch(err => {
@@ -279,11 +290,13 @@ function createCardHTML(item, options = {}) {
   const pdfUrl = isTextOnly ? "#" : formatPdfUrl(rawLink);
   
   const title = escapeHTML(item.title || "Untitled Notice");
-  const date = escapeHTML(item.date || "N/A");
+  const titleJS = escapeJS(item.title || "Untitled Notice");
+  const date = escapeHTML(formatDateString(item.date) || "N/A");
   
+  let rawDesc = item.desc || item.description || item.text || "";
   let textContentBase64 = null;
   if (isTextOnly) {
-    textContentBase64 = encodeURIComponent(item.desc || item.description || item.text || "No detailed description available.");
+    textContentBase64 = encodeURIComponent(rawDesc || "No detailed description available.").replace(/'/g, "%27");
   }
 
   const shareHtml = options.hideCopy ? "" : `
@@ -292,26 +305,44 @@ function createCardHTML(item, options = {}) {
     </button>
   `;
 
+  const tagInfo = getTagInfo(item.date);
+  const tagHtml = tagInfo ? `<span class="badge-time ${tagInfo.className}">${tagInfo.text}</span>` : "";
+
+  let visitBtnHtml = "";
+  let linkMatch = rawDesc.match(/href=['"]([^'"]+)['"]/);
+  if (linkMatch && linkMatch[1]) {
+    visitBtnHtml = `
+      <a href="${linkMatch[1]}" target="_blank" rel="noopener noreferrer" class="btn-visit" onclick="event.stopPropagation();">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit
+      </a>
+    `;
+  }
+
+  const noticeArg = textContentBase64 ? "'" + textContentBase64 + "'" : "null";
+
   return `
     <div class="card">
       <div class="card-header">
-        <span class="badge-dept">
-          <i class="${deptIcon}"></i> ${displayBadge}
-        </span>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span class="badge-dept">
+            <i class="${deptIcon}"></i> ${displayBadge}
+          </span>
+          ${tagHtml}
+        </div>
         <span class="date"><i class="fa-regular fa-calendar"></i> ${date}</span>
       </div>
-
-      <a href="${pdfUrl}" class="notice-title" onclick="handleNoticeClick(event, '${pdfUrl}', '${escapeHTML(title)}', ${textContentBase64 ? `'${textContentBase64}'` : 'null'})">
+      <a href="${pdfUrl}" class="notice-title" onclick="handleNoticeClick(event, '${pdfUrl}', '${titleJS}', ${noticeArg})">
         ${title}
       </a>
-
+      ${rawDesc ? `<div class="notice-desc-preview">${rawDesc}</div>` : ""}
       <div class="card-footer">
         <span class="category-tag">
           <i class="fa-solid fa-tag"></i> ${escapeHTML(item.category || "General")}
         </span>
         <div class="btn-actions">
           ${shareHtml}
-          <button type="button" class="btn-view" onclick="handlePdfView(event, '${pdfUrl}', '${escapeHTML(title)}', ${textContentBase64 ? `'${textContentBase64}'` : 'null'})">
+          ${visitBtnHtml}
+          <button type="button" class="btn-view" onclick="handlePdfView(event, '${pdfUrl}', '${titleJS}', ${noticeArg})">
             <span>View</span>
           </button>
         </div>
