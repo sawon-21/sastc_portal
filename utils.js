@@ -136,6 +136,32 @@ export function showToast(message, iconClass = "fa-circle-check") {
   }, 2500);
 }
 
+export async function shareLink(url, title = "SASTC Notice") {
+  if (!url || url === "#") {
+    showToast("No valid link available to share", "fa-circle-exclamation");
+    return;
+  }
+  
+  const appUrl = window.location.href.split('#')[0];
+  const shareText = `📌 ${title}\n\n📄 Document Link: ${url}\n\n🌐 Shared via SASTC Portal:\n${appUrl}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: title,
+        text: shareText
+      });
+      showToast("Link shared successfully!", "fa-circle-check");
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+         copyLink(shareText);
+      }
+    }
+  } else {
+    copyLink(shareText);
+  }
+}
+
 export function copyLink(url) {
   if (!url || url === "#") {
     showToast("No valid link available to copy", "fa-circle-exclamation");

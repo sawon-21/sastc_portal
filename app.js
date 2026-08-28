@@ -15,7 +15,8 @@ import {
   escapeJS, 
   formatPdfUrl, 
   closePdfModal, 
-  copyLink, 
+  copyLink,
+  shareLink,
   handleNoticeClick, 
   handlePdfView, 
   debounce,
@@ -24,14 +25,19 @@ import {
   getTagInfo,
   formatDateString
 } from './utils.js';
+import { initCalculator } from './calculator.js';
 
 window.handleNoticeClick = handleNoticeClick;
 window.handlePdfView = handlePdfView;
 window.copyLink = copyLink;
+window.shareLink = shareLink;
 
 // Storage Keys
 const LS_ACTIVE_DEPT = "sastc_active_dept";
 const LS_DEPT_PREF = "sastc_dept_preference";
+const LS_NOTIFICATIONS_ENABLED = "sastc_notifications_enabled";
+const LS_SEEN_NOTICES_COUNT = "sastc_seen_notices_count";
+const LS_SEEN_RESULTS_COUNT = "sastc_seen_results_count";
 
 // State variables
 let activeDept = localStorage.getItem(LS_ACTIVE_DEPT) || "ALL";
@@ -56,6 +62,21 @@ document.addEventListener("DOMContentLoaded", () => {
   resultList = document.getElementById("resultList");
 
   initDeptPreference();
+  initPushNotificationsToggle();
+  initApiKeysManagement();
+
+  const LS_SEEN_NOTICES_COUNT = "sastc_seen_notices_count";
+  const LS_SEEN_RESULTS_COUNT = "sastc_seen_results_count";
+
+  // Migrate old storage keys to new format to prevent sudden large badge numbers
+  if (localStorage.getItem(LS_SEEN_NOTICES_COUNT)) {
+    localStorage.setItem("seen_notices_ALL", localStorage.getItem(LS_SEEN_NOTICES_COUNT));
+    localStorage.removeItem(LS_SEEN_NOTICES_COUNT);
+  }
+  if (localStorage.getItem(LS_SEEN_RESULTS_COUNT)) {
+    localStorage.setItem("seen_results_ALL", localStorage.getItem(LS_SEEN_RESULTS_COUNT));
+    localStorage.removeItem(LS_SEEN_RESULTS_COUNT);
+  }
 
   const cached = loadCachedData();
   noticesData = cached.noticesData;
@@ -66,20 +87,197 @@ document.addEventListener("DOMContentLoaded", () => {
   initEventListeners();
   initNavTabs();
   initPwaInstall();
+  initCalculator();
 
   renderAllViews();
 
   // Background Live Sync
   fetchLiveData().then(live => {
-    if (live.noticesData) noticesData = live.noticesData;
-    if (live.resultsData) resultsData = live.resultsData;
-    rebuildMasterDataset();
-    renderAllViews();
+    let hasUpdates = false;
+    if (live.noticesData && live.noticesData.length > noticesData.length) {
+      noticesData = live.noticesData;
+      hasUpdates = true;
+    }
+    if (live.resultsData && live.resultsData.length > resultsData.length) {
+      resultsData = live.resultsData;
+      hasUpdates = true;
+    }
+    if (hasUpdates) {
+      rebuildMasterDataset();
+      renderAllViews();
+      updateBadges();
+      
+      const seenNoticesKey = `seen_notices_${deptPreference}`;
+      const seenResultsKey = `seen_results_${deptPreference}`;
+      const seenNotices = parseInt(localStorage.getItem(seenNoticesKey) || 0);
+      const seenResults = parseInt(localStorage.getItem(seenResultsKey) || 0);
+      
+      const noticesSet = getFilteredNoticesSet();
+      const resultsSet = getFilteredResultsSet();
+
+      notifyUpdates(Math.max(0, noticesSet.length - seenNotices), Math.max(0, resultsSet.length - seenResults));
+    }
   });
 });
 
+function initPushNotificationsToggle() {
+  const toggle = document.getElementById("pushNotificationToggle");
+  if (!toggle) return;
+  
+  toggle.checked = localStorage.getItem(LS_NOTIFICATIONS_ENABLED) === "true" && Notification.permission === "granted";
+  
+  toggle.addEventListener("change", async (e) => {
+    if (e.target.checked) {
+      if (!("Notification" in window)) {
+        showToast("Push notifications not supported on this browser.");
+        e.target.checked = false;
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        localStorage.setItem(LS_NOTIFICATIONS_ENABLED, "true");
+        showToast("Push notifications enabled!");
+      } else {
+        localStorage.setItem(LS_NOTIFICATIONS_ENABLED, "false");
+        e.target.checked = false;
+        showToast("Permission denied for notifications.");
+      }
+    } else {
+      localStorage.setItem(LS_NOTIFICATIONS_ENABLED, "false");
+      showToast("Push notifications disabled.");
+    }
+  });
+}
+
+function initApiKeysManagement() {
+  const inputEl = document.getElementById("newApiKeyInput");
+  const addBtn = document.getElementById("addApiKeyBtn");
+  const listEl = document.getElementById("apiKeyList");
+  const emptyMsg = document.getElementById("emptyApiKeyMsg");
+
+  if (!inputEl || !addBtn || !listEl) return;
+
+  let apiKeys = JSON.parse(localStorage.getItem("geminiApiKeys")) || [];
+
+  function renderKeys() {
+    if (apiKeys.length === 0) {
+      if (emptyMsg) emptyMsg.style.display = "block";
+      listEl.innerHTML = '';
+      if (emptyMsg) listEl.appendChild(emptyMsg);
+      return;
+    }
+
+    if (emptyMsg) emptyMsg.style.display = "none";
+    listEl.innerHTML = '';
+
+    apiKeys.forEach((key, index) => {
+      const maskedKey = key.substring(0, 8) + "..." + key.substring(key.length - 4);
+      const div = document.createElement("div");
+      div.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-[#85bdf0]";
+      div.innerHTML = `
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-key text-gray-400"></i>
+          <span class="font-mono text-sm text-gray-700">${maskedKey}</span>
+        </div>
+        <button class="text-red-400 hover:text-red-600 delete-key-btn p-1 transition-colors" data-idx="${index}" title="Delete Key">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      `;
+      listEl.appendChild(div);
+    });
+
+    listEl.querySelectorAll('.delete-key-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = e.currentTarget.getAttribute('data-idx');
+        apiKeys.splice(idx, 1);
+        localStorage.setItem("geminiApiKeys", JSON.stringify(apiKeys));
+        renderKeys();
+        showToast("API key removed");
+      });
+    });
+  }
+
+  addBtn.addEventListener("click", () => {
+    const newKey = inputEl.value.trim();
+    if (!newKey) {
+      showToast("Please enter an API key");
+      return;
+    }
+    
+    if (apiKeys.includes(newKey)) {
+      showToast("Key already exists");
+      return;
+    }
+
+    apiKeys.push(newKey);
+    localStorage.setItem("geminiApiKeys", JSON.stringify(apiKeys));
+    inputEl.value = "";
+    renderKeys();
+    showToast("API key added successfully");
+  });
+
+  renderKeys();
+}
+
+function notifyUpdates(newNotices, newResults) {
+  if (localStorage.getItem(LS_NOTIFICATIONS_ENABLED) === "true" && Notification.permission === "granted") {
+    if (newNotices > 0) new Notification("SASTC Portal", { body: `You have ${newNotices} new notice(s)!` });
+    if (newResults > 0) new Notification("SASTC Portal", { body: `You have ${newResults} new result(s)!` });
+  }
+}
+
+function getFilteredNoticesSet() {
+  let filtered = masterDataset.filter(item => !item._isResult);
+  if (deptPreference !== "ALL") {
+    filtered = filtered.filter(item => item._deptCode === deptPreference);
+  }
+  return filtered;
+}
+
+function getFilteredResultsSet() {
+  let results = masterDataset.filter(item => {
+    if (!item._isResult) return false;
+    const text = `${item.title || ''} ${item.department || ''} ${item.category || ''}`.toUpperCase();
+    return /\bSASTC\b/i.test(text);
+  });
+  if (deptPreference !== "ALL") {
+    results = results.filter(item => {
+      const text = `${item.title || ''} ${item.department || ''} ${item.category || ''}`.toUpperCase();
+      return new RegExp(`\\b${deptPreference}\\b`, "i").test(text);
+    });
+  }
+  return results;
+}
+
+function updateBadges() {
+  const seenNoticesKey = `seen_notices_${deptPreference}`;
+  const seenResultsKey = `seen_results_${deptPreference}`;
+  
+  const seenNotices = parseInt(localStorage.getItem(seenNoticesKey) || 0);
+  const seenResults = parseInt(localStorage.getItem(seenResultsKey) || 0);
+  
+  const noticesSet = getFilteredNoticesSet();
+  const resultsSet = getFilteredResultsSet();
+
+  const newNotices = Math.max(0, noticesSet.length - seenNotices);
+  const newResults = Math.max(0, resultsSet.length - seenResults);
+
+  const noticeBadge = document.getElementById("navNoticeBadge");
+  const resultBadge = document.getElementById("navResultBadge");
+
+  if (noticeBadge) {
+    noticeBadge.textContent = newNotices;
+    noticeBadge.style.display = newNotices > 0 ? "inline-block" : "none";
+  }
+  if (resultBadge) {
+    resultBadge.textContent = newResults;
+    resultBadge.style.display = newResults > 0 ? "inline-block" : "none";
+  }
+}
+
 function rebuildMasterDataset() {
   masterDataset = indexDataset(noticesData, resultsData);
+  updateBadges();
 }
 
 /**
@@ -98,7 +296,19 @@ function initDeptPreference() {
         localStorage.setItem(LS_ACTIVE_DEPT, activeDept);
       }
 
+      // If we are currently viewing the notice or result tab, mark the newly filtered items as read
+      const seenNoticesKey = `seen_notices_${deptPreference}`;
+      const seenResultsKey = `seen_results_${deptPreference}`;
+      
+      if (activeTab === "notice") {
+        localStorage.setItem(seenNoticesKey, getFilteredNoticesSet().length);
+      } else if (activeTab === "result") {
+        localStorage.setItem(seenResultsKey, getFilteredResultsSet().length);
+      }
+
+      window.dispatchEvent(new Event('sastc_dept_changed'));
       renderAllViews();
+      updateBadges();
       showToast(`Filter set to ${deptPreference}`);
     });
   }
@@ -125,6 +335,19 @@ function triggerHaptic() {
 function switchTab(tabName) {
   console.log("Switching to tab:", tabName);
   activeTab = tabName;
+
+  const seenNoticesKey = `seen_notices_${deptPreference}`;
+  const seenResultsKey = `seen_results_${deptPreference}`;
+
+  if (tabName === "notice") {
+    const noticesSet = getFilteredNoticesSet();
+    localStorage.setItem(seenNoticesKey, noticesSet.length);
+    updateBadges();
+  } else if (tabName === "result") {
+    const resultsSet = getFilteredResultsSet();
+    localStorage.setItem(seenResultsKey, resultsSet.length);
+    updateBadges();
+  }
 
   document.querySelectorAll(".bottom-nav .nav-item").forEach(btn => {
     btn.classList.toggle("active", btn.getAttribute("data-tab") === tabName);
@@ -207,6 +430,7 @@ function renderHomeView() {
         });
 
         sastcNoticeList.innerHTML = filteredSastc.map(item => createCardHTML(item, { hideCopy: true })).join("");
+        observeCards();
       })
       .catch(err => {
         sastcNoticeList.innerHTML = `
@@ -243,6 +467,7 @@ function renderNotices() {
   }
 
   noticeList.innerHTML = filtered.map(item => createCardHTML(item)).join("");
+  observeCards();
 }
 
 /**
@@ -276,6 +501,7 @@ function renderResultsView() {
   }
 
   resultList.innerHTML = results.map(item => createCardHTML(item)).join("");
+  observeCards();
 }
 
 /**
@@ -301,8 +527,8 @@ function createCardHTML(item, options = {}) {
   }
 
   const shareHtml = options.hideCopy ? "" : `
-    <button type="button" class="btn-share" onclick="copyLink('${pdfUrl}')" title="Copy Link">
-      <i class="fa-regular fa-copy"></i>
+    <button type="button" class="btn-share" onclick="shareLink('${pdfUrl}', '${titleJS}')" title="Share Link">
+      <i class="fa-solid fa-share-nodes"></i>
     </button>
   `;
 
@@ -322,7 +548,7 @@ function createCardHTML(item, options = {}) {
   const noticeArg = textContentBase64 ? "'" + textContentBase64 + "'" : "null";
 
   return `
-    <div class="card">
+    <div class="card card-animate">
       <div class="card-header">
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <span class="badge-dept">
@@ -416,13 +642,15 @@ function initEventListeners() {
   }
 
   const bottomNav = document.querySelector(".bottom-nav");
+  const appHeader = document.querySelector(".app-header");
   let lastScrollY = window.scrollY;
   window.addEventListener("scroll", () => {
-    if (!bottomNav) return;
     if (window.scrollY > lastScrollY && window.scrollY > 50) {
-      bottomNav.classList.add("nav-hidden");
+      if (bottomNav) bottomNav.classList.add("nav-hidden");
+      if (appHeader) appHeader.classList.add("header-hidden");
     } else {
-      bottomNav.classList.remove("nav-hidden");
+      if (bottomNav) bottomNav.classList.remove("nav-hidden");
+      if (appHeader) appHeader.classList.remove("header-hidden");
     }
     lastScrollY = window.scrollY;
   }, { passive: true });
@@ -436,4 +664,20 @@ function initEventListeners() {
   window.addEventListener("online", updateOnlineStatus);
   window.addEventListener("offline", updateOnlineStatus);
   updateOnlineStatus();
+}
+
+// Vertical Card Sliding Animation
+const scrollObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      scrollObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
+
+function observeCards() {
+  document.querySelectorAll('.card-animate:not(.visible)').forEach(card => {
+    scrollObserver.observe(card);
+  });
 }

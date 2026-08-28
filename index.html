@@ -20,22 +20,64 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <link rel="stylesheet" href="style.css" />
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: {
+        extend: {
+          colors: {
+            primary: 'var(--primary)',
+            card: 'var(--bg-card)',
+            muted: 'var(--text-muted)'
+          }
+        }
+      }
+    }
+  </script>
 </head>
 
 <body>
+  <!-- Animated Background -->
+  <div class="bg-anim-container" aria-hidden="true">
+    <!-- CSE Icons -->
+    <svg class="bg-anim-icon anim-cse i1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+    <svg class="bg-anim-icon anim-cse i4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+    <svg class="bg-anim-icon anim-cse i7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+    <svg class="bg-anim-icon anim-cse i10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+    <svg class="bg-anim-icon anim-cse i13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+    
+    <!-- Agriculture Icons -->
+    <svg class="bg-anim-icon anim-agri i2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"></path><path d="M12 12c-4 0-7-3-7-7 0 4 3 7 7 7Z"></path><path d="M12 12c4 0 7-3 7-7 0 4-3 7-7 7Z"></path></svg>
+    <svg class="bg-anim-icon anim-agri i5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 22l7.4-7.4"></path></svg>
+    <svg class="bg-anim-icon anim-agri i8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    <svg class="bg-anim-icon anim-agri i11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>
+    <svg class="bg-anim-icon anim-agri i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path></svg>
+
+    <!-- BBA Icons -->
+    <svg class="bg-anim-icon anim-bba i3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+    <svg class="bg-anim-icon anim-bba i6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+    <svg class="bg-anim-icon anim-bba i9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+    <svg class="bg-anim-icon anim-bba i12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+    <svg class="bg-anim-icon anim-bba i15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+  </div>
   <!-- Sticky Top App Header -->
   <header class="app-header">
     <div class="header-brand">
-      <div class="logo-icon">
+      <div class="design-logo">
         <img src="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" alt="Portal Logo" id="logoImg">
       </div>
       <div>
-        <h1 class="brand-title" style="white-space: nowrap;">SASTC <span style="display: inline-block;">PORTAL</span></h1>
+        <h1 class="brand-title">SASTC <span class="portal-text">PORTAL</span></h1>
       </div>
     </div>
     <div class="header-actions">
       <div id="headerOfflineIcon" class="header-offline" style="display: none;">
-        <i class="fa-solid fa-cloud-arrow-down"></i> Offline
+        <i class="fa-solid fa-cloud-arrow-down"></i>
       </div>
     </div>
   </header>
@@ -44,7 +86,7 @@
     <!-- TAB 1: HOME VIEW -->
     <section id="view-home" class="tab-view active">
       <!-- Highlight Card -->
-      <div class="hero-card" id="heroLatestCard">
+      <div class="hero-card card-animate" id="heroLatestCard">
         <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Latest Notice</div>
         <h3 class="hero-title" id="heroTitle">Academic Notice</h3>
         <p class="hero-desc" id="heroDesc">Loading latest department notice...</p>
@@ -94,14 +136,142 @@
 
     </section>
 
-    <!-- TAB 4: SETTINGS VIEW -->
+    <!-- TAB 4: CALCULATOR VIEW -->
+    <section id="view-calculator" class="tab-view">
+      <div class="settings-header-main" style="margin-bottom: 16px;">
+        <h2>CGPA Calculator</h2> <h1 style="color:green">Comming soon</h1>
+        <p>HSTU AI-Powered Academic Advisor</p>
+      </div>
+
+      <!-- Settings: Level & Semester -->
+      <div class="settings-card card-animate shadow-sm rounded-xl mb-4 p-4 bg-white border border-[#85bdf0]">
+        <div class="settings-header mb-4 flex items-center gap-2 text-primary">
+          <i class="fa-solid fa-sliders text-lg"></i>
+          <h3 class="font-bold text-lg m-0">Academic Target</h3>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-4 w-full">
+          <div class="flex-1 flex flex-col">
+            <label class="text-sm font-semibold mb-1 text-gray-700">Level</label>
+            <select id="calcLevel" class="setting-select w-full p-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-[#85bdf0] transition-all outline-none">
+              <option value="1">Level 1</option>
+              <option value="2">Level 2</option>
+              <option value="3">Level 3</option>
+              <option value="4">Level 4</option>
+            </select>
+          </div>
+          <div class="flex-1 flex flex-col">
+            <label class="text-sm font-semibold mb-1 text-gray-700">Semester</label>
+            <select id="calcSemester" class="setting-select w-full p-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-[#85bdf0] transition-all outline-none">
+              <option value="I">Semester I</option>
+              <option value="II">Semester II</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cumulative History Summary -->
+      <div class="settings-card card-animate shadow-sm rounded-xl mb-4 p-4 bg-white border border-[#85bdf0] flex flex-col">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2 text-primary">
+            <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+            <h3 class="font-bold text-lg m-0">GPA History</h3>
+          </div>
+          <button id="clearHistoryBtn" type="button" class="bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 font-semibold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 shadow-sm border border-red-100">
+            <i class="fa-solid fa-trash-can"></i> <span>Clear</span>
+          </button>
+        </div>
+        <div id="historyList" class="flex flex-col gap-2 mb-3 mt-2 w-full max-h-[50vh] md:max-h-[70vh] overflow-y-auto pr-1">
+          <!-- History items will be populated here -->
+          <p class="text-sm text-gray-400 italic" id="emptyHistoryMsg">No saved semesters yet.</p>
+        </div>
+        <div class="border-t border-[#85bdf0] pt-3 flex justify-between items-end">
+          <div class="flex flex-col">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Cumulative</span>
+            <span class="text-sm text-gray-700">Total Credits: <strong id="cumCredits">0.00</strong></span>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">CGPA</span>
+            <span class="text-2xl font-black text-indigo-600 leading-none" id="cumCgpa">0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Semester Courses -->
+      <div class="settings-card card-animate shadow-sm rounded-xl mb-4 p-4 bg-white border border-[#85bdf0]">
+        <div class="settings-header mb-4 flex justify-between items-center text-primary">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-book-open text-lg"></i>
+            <h3 class="font-bold text-lg m-0">Courses <span id="currentSemLabel" class="text-sm font-normal text-gray-500 ml-1"></span></h3>
+          </div>
+          <button id="toggleCoursesBtn" type="button" class="text-gray-400 hover:text-indigo-600 transition-colors p-2 rounded-lg bg-gray-50 hover:bg-indigo-50">
+            <i id="toggleCoursesIcon" class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+        
+        <div id="courseContentWrapper" class="hidden">
+          <div id="courseList" class="flex flex-col gap-3">
+            <!-- Courses will be populated here automatically -->
+          </div>
+
+          <div class="mt-5 border-t border-[#85bdf0] pt-4">
+            <div class="flex justify-between items-center mb-4 bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+              <span class="font-semibold text-gray-700">Term GPA</span>
+              <span id="termGpaDisplay" class="text-2xl font-black text-indigo-600">0.00</span>
+            </div>
+            
+            <button id="saveTermBtn" type="button" class="w-full bg-primary hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all flex justify-center items-center gap-2">
+              <i class="fa-solid fa-floppy-disk"></i> Calculate & Save Semester
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Advisor Section -->
+      <div class="settings-card card-animate shadow-lg rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-5 border-0">
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg m-0 text-white">AI Academic Advisor</h3>
+              <p class="text-indigo-100 text-sm m-0">Personalized insights based on your grades</p>
+            </div>
+          </div>
+          <button id="getAdviceBtn" type="button" class="w-full bg-white text-indigo-700 hover:bg-indigo-50 font-bold py-3 px-4 rounded-xl shadow transition-colors flex justify-center items-center gap-2">
+            <i class="fa-solid fa-brain"></i> Get AI Insights
+          </button>
+        </div>
+      </div>
+
+      <div id="aiAdvisorCard" class="settings-card card-animate mt-4 shadow-md rounded-xl bg-white border-l-4 border-[#85bdf0] p-5 hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2 text-indigo-700">
+            <i class="fa-solid fa-robot text-lg"></i>
+            <h3 class="font-bold text-lg m-0">Advisor Feedback</h3>
+          </div>
+        </div>
+        <div id="aiAdvisorText" class="text-[15px] leading-relaxed text-gray-700 prose prose-sm prose-indigo"></div>
+      </div>
+      
+      <!-- Advisor History Modal/Section -->
+      <div id="advisorHistorySection" class="settings-card card-animate mt-4 shadow-md rounded-xl bg-gray-50 border border-[#85bdf0] p-5 hidden">
+        <h3 class="font-bold text-gray-700 mb-3"><i class="fa-solid fa-clock-rotate-left"></i> Past Insights</h3>
+        <div id="advisorHistoryList" class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
+          <!-- History items will go here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: SETTINGS VIEW -->
     <section id="view-settings" class="tab-view">
       <div class="settings-header-main">
         <h2>Settings</h2>
         <p>Manage your application preferences</p>
       </div>
 
-      <div class="settings-card">
+      <div class="settings-card card-animate">
         <div class="settings-header">
           <i class="fa-solid fa-sliders"></i>
           <h3>Department Preferences</h3>
@@ -114,21 +284,58 @@
             <p>Show notices strictly for your department</p>
           </div>
           <select id="deptPreferenceSelect" class="setting-select w-full mt-2">
-            <option value="ALL">Show All Departments</option>
+            
             <option value="CSE">Computer Science (CSE)</option>
             <option value="AG">B.Sc in Agriculture</option>
             <option value="BBA">Business Admin (BBA)</option>
           </select>
         </div>
       </div>
+
+      <!-- API Keys Management -->
+      <div class="settings-card card-animate shadow-sm rounded-xl mb-4 p-4 bg-white border border-[#85bdf0]">
+        <div class="settings-header mb-2 flex items-center gap-2 text-primary">
+          <i class="fa-solid fa-key text-lg"></i>
+          <h3 class="font-bold text-lg m-0">Gemini API Keys</h3>
+        </div>
+        <p class="text-sm text-gray-500 mb-4">Add multiple API keys to avoid rate limits. The AI Advisor will automatically rotate them.</p>
+
+        <div class="flex flex-col sm:flex-row gap-2 mb-4">
+          <input type="password" id="newApiKeyInput" class="setting-select flex-1 p-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Enter Gemini API Key">
+          <button id="addApiKeyBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Add</button>
+        </div>
+
+        <div id="apiKeyList" class="flex flex-col gap-2 max-h-48 overflow-y-auto">
+          <!-- Keys will be rendered here -->
+          <p class="text-sm text-gray-400 italic" id="emptyApiKeyMsg">No API keys added yet.</p>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="settings-card card-animate">
+        <div class="settings-header">
+          <i class="fa-solid fa-bell"></i>
+          <h3>Notifications</h3>
+        </div>
+        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <div class="setting-info">
+            <label for="pushNotificationToggle"><strong>Push Notifications</strong></label>
+            <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted, #666);">Get alerted about urgent department updates</p>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="pushNotificationToggle" style="width: 20px; height: 20px; cursor: pointer;">
+          </div>
+        </div>
+      </div>
+
       <!-- Developer Details -->
-      <div class="settings-card dev-card">
+      <div class="settings-card card-animate dev-card">
         <div class="dev-profile">
           <div class="dev-avatar"><i class="fa-solid fa-code"></i></div>
           <div class="dev-info">
             <h4>Mehedi Al Hasan Sawon</h4>
             <p class="dev-org">Developed & Maintained </p>
-            <p class="dev-meta">Version 2.0.0 • Last Update: 15 Aug 2026</p>
+            <p class="dev-meta">Version 2.1.0 • Last Update: 25 Aug 2026</p>
             <div class="dev-socials mt-2">
               <a href="https://www.facebook.com/mehedialhasansawon" target="_blank" rel="noopener noreferrer" class="social-link fb">
                 <i class="fa-brands fa-facebook"></i> Facebook
@@ -162,6 +369,12 @@
     <button type="button" class="nav-item" data-tab="result">
       <i class="fa-solid fa-chart-column"></i>
       <span>Result</span>
+      <span class="nav-badge" id="navResultBadge" style="display:none;">0</span>
+    </button>
+
+    <button type="button" class="nav-item" data-tab="calculator">
+      <i class="fa-solid fa-calculator"></i>
+      <span>CGPA</span>
     </button>
 
     <button type="button" class="nav-item" data-tab="settings">
@@ -207,8 +420,10 @@
   </div>
   <!-- Toast Notification -->
   <div id="toast" class="toast">
-    <i id="toastIcon" class="fa-solid fa-circle-check"></i>
-    <span id="toastMsg">Link copied to clipboard</span>
+    <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+      <i id="toastIcon" class="fa-solid fa-circle-check"></i>
+      <span id="toastMsg" style="white-space:nowrap; text-align:center;">Link copied to clipboard</span>
+    </div>
   </div>
 
   <script type="module" src="app.js"></script>
