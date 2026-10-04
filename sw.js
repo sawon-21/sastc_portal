@@ -3,7 +3,7 @@
  */
 
 const CACHE_NAME = 'sastc-portal-v003';
-const DATA_CACHE_NAME = 'sastc-data-cache-v002';
+const DATA_CACHE_NAME = 'sastc-data-cache-v003';
 
 const ASSETS_TO_CACHE = [
   './',
