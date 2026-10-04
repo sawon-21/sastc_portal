@@ -41,7 +41,7 @@ const LS_SEEN_RESULTS_COUNT = "sastc_seen_results_count";
 
 // State variables
 let activeDept = localStorage.getItem(LS_ACTIVE_DEPT) || "ALL";
-let deptPreference = localStorage.getItem(LS_DEPT_PREF) || "CSE";
+let deptPreference = localStorage.getItem(LS_DEPT_PREF) || "AG";
 let activeTab = "home";
 
 let noticesData = [];
