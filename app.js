@@ -35,13 +35,13 @@ window.shareLink = shareLink;
 // Storage Keys
 const LS_ACTIVE_DEPT = "sastc_active_dept";
 const LS_DEPT_PREF = "sastc_dept_preference";
-const LS_NOTIFICATIONS_ENABLED = "sastc_notifications_enabled";
 const LS_SEEN_NOTICES_COUNT = "sastc_seen_notices_count";
 const LS_SEEN_RESULTS_COUNT = "sastc_seen_results_count";
 
 // State variables
-let activeDept = localStorage.getItem(LS_ACTIVE_DEPT) || "ALL";
-let deptPreference = localStorage.getItem(LS_DEPT_PREF) || "AG";
+const savedDeptPref = localStorage.getItem(LS_DEPT_PREF);
+let deptPreference = savedDeptPref || "CSE";
+let activeDept = localStorage.getItem(LS_ACTIVE_DEPT) || deptPreference;
 let activeTab = "home";
 
 let noticesData = [];
@@ -50,23 +50,32 @@ let masterDataset = [];
 let deferredPrompt = null;
 
 // DOM Element Handles
-let searchInput, clearBtn, noticeList, resultList;
+let noticeSearchInput, noticeClearBtn, resultSearchInput, resultClearBtn, noticeList, resultList;
+let noticeSearchQuery = "";
+let resultSearchQuery = "";
 
-let sastcNoticesData = [];
+const PAGE_SIZE = 25;
+let noticeVisibleCount = PAGE_SIZE;
+let resultVisibleCount = PAGE_SIZE;
+const tabScrollPositions = { home: 0, notice: 0, result: 0, calculator: 0, settings: 0 };
+
+let sastcNoticesCache = null;
+let sastcNoticesLoading = false;
 
 document.addEventListener("DOMContentLoaded", () => {
-  searchInput = document.getElementById("searchInput");
-  clearBtn = document.getElementById("clearBtn");
+  noticeSearchInput = document.getElementById("noticeSearchInput");
+  noticeClearBtn = document.getElementById("noticeClearBtn");
+  resultSearchInput = document.getElementById("resultSearchInput");
+  resultClearBtn = document.getElementById("resultClearBtn");
   noticeList = document.getElementById("noticeList");
-  const sastcNoticeList = document.getElementById("sastcNoticeList");
   resultList = document.getElementById("resultList");
 
-  initDeptPreference();
-  initPushNotificationsToggle();
-  initApiKeysManagement();
+  // Clean up any legacy notification flag
+  localStorage.removeItem("sastc_notifications_enabled");
 
-  const LS_SEEN_NOTICES_COUNT = "sastc_seen_notices_count";
-  const LS_SEEN_RESULTS_COUNT = "sastc_seen_results_count";
+  initDeptPreference();
+  initFirstVisitDeptPopup();
+  initApiKeysManagement();
 
   // Migrate old storage keys to new format to prevent sudden large badge numbers
   if (localStorage.getItem(LS_SEEN_NOTICES_COUNT)) {
@@ -85,67 +94,120 @@ document.addEventListener("DOMContentLoaded", () => {
   rebuildMasterDataset();
   initSecurityProtections();
   initEventListeners();
+  initSearchControls();
   initNavTabs();
   initPwaInstall();
   initCalculator();
+  updateHeaderDeptPill();
 
   renderAllViews();
 
-  // Background Live Sync
-  fetchLiveData().then(live => {
+  // Background Live Sync (without browser notifications)
+  syncLiveNotices(false);
+
+  // Register Service Worker for instant repeat load & offline support
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+});
+
+function syncLiveNotices(isManual = false) {
+  const syncBtn = document.getElementById("headerSyncBtn");
+  if (syncBtn && isManual) syncBtn.classList.add("spinning");
+
+  return fetchLiveData().then(live => {
     let hasUpdates = false;
-    if (live.noticesData && live.noticesData.length > noticesData.length) {
-      noticesData = live.noticesData;
-      hasUpdates = true;
+    if (live.noticesData && live.noticesData.length > 0) {
+      if (live.noticesData.length !== noticesData.length || isManual) {
+        noticesData = live.noticesData;
+        hasUpdates = true;
+      }
     }
-    if (live.resultsData && live.resultsData.length > resultsData.length) {
-      resultsData = live.resultsData;
-      hasUpdates = true;
+    if (live.resultsData && live.resultsData.length > 0) {
+      if (live.resultsData.length !== resultsData.length || isManual) {
+        resultsData = live.resultsData;
+        hasUpdates = true;
+      }
     }
     if (hasUpdates) {
       rebuildMasterDataset();
       renderAllViews();
       updateBadges();
-      
-      const seenNoticesKey = `seen_notices_${deptPreference}`;
-      const seenResultsKey = `seen_results_${deptPreference}`;
-      const seenNotices = parseInt(localStorage.getItem(seenNoticesKey) || 0);
-      const seenResults = parseInt(localStorage.getItem(seenResultsKey) || 0);
-      
-      const noticesSet = getFilteredNoticesSet();
-      const resultsSet = getFilteredResultsSet();
-
-      notifyUpdates(Math.max(0, noticesSet.length - seenNotices), Math.max(0, resultsSet.length - seenResults));
+    }
+    if (isManual) {
+      showToast("Portal synced with latest updates");
+    }
+  }).finally(() => {
+    if (syncBtn && isManual) {
+      setTimeout(() => syncBtn.classList.remove("spinning"), 300);
     }
   });
-});
+}
 
-function initPushNotificationsToggle() {
-  const toggle = document.getElementById("pushNotificationToggle");
-  if (!toggle) return;
-  
-  toggle.checked = localStorage.getItem(LS_NOTIFICATIONS_ENABLED) === "true" && Notification.permission === "granted";
-  
-  toggle.addEventListener("change", async (e) => {
-    if (e.target.checked) {
-      if (!("Notification" in window)) {
-        showToast("Push notifications not supported on this browser.");
-        e.target.checked = false;
-        return;
-      }
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        localStorage.setItem(LS_NOTIFICATIONS_ENABLED, "true");
-        showToast("Push notifications enabled!");
-      } else {
-        localStorage.setItem(LS_NOTIFICATIONS_ENABLED, "false");
-        e.target.checked = false;
-        showToast("Permission denied for notifications.");
-      }
-    } else {
-      localStorage.setItem(LS_NOTIFICATIONS_ENABLED, "false");
-      showToast("Push notifications disabled.");
+function updateHeaderDeptPill() {
+  const headerDeptText = document.getElementById("headerDeptText");
+  if (headerDeptText) {
+    headerDeptText.textContent = deptPreference;
+  }
+}
+
+/**
+ * Mandatory First-Visit Department Selection Popup
+ */
+function initFirstVisitDeptPopup() {
+  const existingPref = localStorage.getItem(LS_DEPT_PREF);
+  if (existingPref && ["CSE", "AG", "BBA"].includes(existingPref)) {
+    return;
+  }
+
+  const modal = document.getElementById("deptOnboardingModal");
+  const optionBtns = document.querySelectorAll("#deptOnboardingOptions .dept-option-btn");
+  const confirmBtn = document.getElementById("confirmDeptBtn");
+  if (!modal || !confirmBtn) return;
+
+  let selectedDept = null;
+  modal.classList.add("active");
+
+  optionBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      triggerHaptic();
+      selectedDept = btn.getAttribute("data-dept");
+      optionBtns.forEach(b => {
+        const isMatch = b === btn;
+        b.classList.toggle("selected", isMatch);
+        const checkIcon = b.querySelector(".dept-opt-check");
+        if (checkIcon) {
+          checkIcon.className = isMatch
+            ? "fa-solid fa-circle-check dept-opt-check"
+            : "fa-regular fa-circle dept-opt-check";
+        }
+      });
+      confirmBtn.disabled = !selectedDept;
+    });
+  });
+
+  confirmBtn.addEventListener("click", () => {
+    if (!selectedDept) return;
+    triggerHaptic();
+
+    deptPreference = selectedDept;
+    activeDept = selectedDept;
+    localStorage.setItem(LS_DEPT_PREF, deptPreference);
+    localStorage.setItem(LS_ACTIVE_DEPT, activeDept);
+
+    const selectEl = document.getElementById("deptPreferenceSelect");
+    if (selectEl) {
+      selectEl.value = deptPreference;
     }
+
+    modal.classList.remove("active");
+    updateHeaderDeptPill();
+    window.dispatchEvent(new Event("sastc_dept_changed"));
+    renderAllViews();
+    updateBadges();
+    showToast(`Department set to ${deptPreference}`);
   });
 }
 
@@ -217,13 +279,6 @@ function initApiKeysManagement() {
   });
 
   renderKeys();
-}
-
-function notifyUpdates(newNotices, newResults) {
-  if (localStorage.getItem(LS_NOTIFICATIONS_ENABLED) === "true" && Notification.permission === "granted") {
-    if (newNotices > 0) new Notification("SASTC Portal", { body: `You have ${newNotices} new notice(s)!` });
-    if (newResults > 0) new Notification("SASTC Portal", { body: `You have ${newResults} new result(s)!` });
-  }
 }
 
 function getFilteredNoticesSet() {
@@ -306,10 +361,66 @@ function initDeptPreference() {
         localStorage.setItem(seenResultsKey, getFilteredResultsSet().length);
       }
 
+      noticeVisibleCount = PAGE_SIZE;
+      resultVisibleCount = PAGE_SIZE;
+      updateHeaderDeptPill();
       window.dispatchEvent(new Event('sastc_dept_changed'));
       renderAllViews();
       updateBadges();
       showToast(`Filter set to ${deptPreference}`);
+    });
+  }
+}
+
+/**
+ * Instant Debounced Search Controls for Notice & Result Views
+ */
+function initSearchControls() {
+  if (noticeSearchInput) {
+    const onNoticeSearch = debounce((val) => {
+      noticeSearchQuery = val.trim();
+      noticeVisibleCount = PAGE_SIZE;
+      renderNotices();
+    }, 120);
+
+    noticeSearchInput.addEventListener("input", (e) => {
+      const val = e.target.value;
+      if (noticeClearBtn) noticeClearBtn.style.display = val.length > 0 ? "block" : "none";
+      onNoticeSearch(val);
+    });
+  }
+
+  if (noticeClearBtn) {
+    noticeClearBtn.addEventListener("click", () => {
+      if (noticeSearchInput) noticeSearchInput.value = "";
+      noticeClearBtn.style.display = "none";
+      noticeSearchQuery = "";
+      noticeVisibleCount = PAGE_SIZE;
+      renderNotices();
+    });
+  }
+
+  if (resultSearchInput) {
+    const onResultSearch = debounce((val) => {
+      resultSearchQuery = val.trim();
+      resultVisibleCount = PAGE_SIZE;
+      renderResultsView();
+    }, 120);
+
+    resultSearchInput.addEventListener("input", (e) => {
+      const val = e.target.value;
+      if (resultClearBtn) resultClearBtn.style.display = val.length > 0 ? "block" : "none";
+      onResultSearch(val);
+    });
+  }
+
+  if (resultClearBtn) {
+    resultClearBtn.addEventListener("click", () => {
+      if (resultSearchInput) resultSearchInput.value = "";
+      resultClearBtn.style.display = "none";
+      resultSearchQuery = "";
+      resultVisibleCount = PAGE_SIZE;
+      renderResultsView();
     });
   }
 }
@@ -333,7 +444,13 @@ function triggerHaptic() {
 }
 
 function switchTab(tabName) {
-  console.log("Switching to tab:", tabName);
+  if (activeTab === tabName) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  // Save current tab scroll position
+  tabScrollPositions[activeTab] = window.scrollY;
   activeTab = tabName;
 
   const seenNoticesKey = `seen_notices_${deptPreference}`;
@@ -357,7 +474,8 @@ function switchTab(tabName) {
     view.classList.toggle("active", view.id === `view-${tabName}`);
   });
 
-  renderAllViews();
+  // Restore scroll position instantly without re-rendering DOM unnecessarily
+  window.scrollTo({ top: tabScrollPositions[tabName] || 0, behavior: "instant" });
 }
 
 function renderAllViews() {
@@ -395,113 +513,152 @@ function renderHomeView() {
     }
   }
 
-  // Fetch and Render SASTC Notices
+  // Fetch and Render SASTC Notices (cached in memory for fast switching)
   const sastcNoticeList = document.getElementById("sastcNoticeList");
   if (sastcNoticeList) {
-    fetch("./sastc-notices.json")
-      .then(res => res.json())
-      .then(data => {
-        let filteredSastc = data;
-        
-        // Apply Selected Department Preference
-        if (deptPreference !== "ALL") {
-          filteredSastc = data.filter(item => {
-            const code = item.deptCode || "SASTC";
-            // Allow matching department notices AND general SASTC notices
-            return code === deptPreference || code === "SASTC";
-          });
-        }
-
-        if (!filteredSastc || filteredSastc.length === 0) {
+    if (sastcNoticesCache) {
+      renderSastcNoticeItems(sastcNoticeList, sastcNoticesCache);
+    } else if (!sastcNoticesLoading) {
+      sastcNoticesLoading = true;
+      fetch("./sastc-notices.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch");
+          return res.json();
+        })
+        .then(data => {
+          sastcNoticesCache = Array.isArray(data) ? data : [];
+          sastcNoticesLoading = false;
+          renderSastcNoticeItems(sastcNoticeList, sastcNoticesCache);
+        })
+        .catch(() => {
+          sastcNoticesLoading = false;
           sastcNoticeList.innerHTML = `
             <div class="state-box">
-              <i class="fa-regular fa-folder-open"></i>
-              <span>No SASTC notices found for ${deptPreference !== "ALL" ? deptPreference : "any department"}.</span>
+              <i class="fa-solid fa-circle-exclamation" style="color:var(--accent-red)"></i>
+              <span>Could not load SASTC notices.</span>
             </div>
           `;
-          return;
-        }
-
-        // Sort by date, latest first
-        filteredSastc.sort((a, b) => {
-          const dateA = new Date(a.date);
-          const dateB = new Date(b.date);
-          return dateB - dateA;
         });
-
-        sastcNoticeList.innerHTML = filteredSastc.map(item => createCardHTML(item, { hideCopy: true })).join("");
-        observeCards();
-      })
-      .catch(err => {
-        sastcNoticeList.innerHTML = `
-          <div class="state-box">
-            <i class="fa-solid fa-triangle-exclamation" style="color:var(--accent-red)"></i>
-            <span>Failed to load SASTC notices.</span>
-          </div>
-        `;
-      });
+    }
   }
 }
 
+function renderSastcNoticeItems(container, data) {
+  let filteredSastc = data;
+
+  if (deptPreference !== "ALL") {
+    filteredSastc = data.filter(item => {
+      const code = item.deptCode || "SASTC";
+      return code === deptPreference || code === "SASTC";
+    });
+  }
+
+  if (!filteredSastc || filteredSastc.length === 0) {
+    container.innerHTML = `
+      <div class="state-box">
+        <i class="fa-regular fa-folder-open"></i>
+        <span>No SASTC notices found for ${deptPreference !== "ALL" ? deptPreference : "any department"}.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const sorted = [...filteredSastc].sort((a, b) => new Date(b.date) - new Date(a.date));
+  container.innerHTML = sorted.map(item => createCardHTML(item, { hideCopy: true })).join("");
+}
+
 /**
- * Render Notices (Strictly filtered for smooth performance)
+ * Render Notices (Strictly filtered & paginated for instant DOM performance)
  */
 function renderNotices() {
   if (!noticeList) return;
   
-  let filtered = masterDataset.filter(item => !item._isResult);
+  let filtered = getFilteredNoticesSet();
 
-  // Apply Selected Department Preference
-  if (deptPreference !== "ALL") {
-    filtered = filtered.filter(item => item._deptCode === deptPreference);
+  if (noticeSearchQuery) {
+    const q = noticeSearchQuery.toLowerCase();
+    filtered = filtered.filter(item => item._searchableText && item._searchableText.includes(q));
   }
 
   if (filtered.length === 0) {
     noticeList.innerHTML = `
       <div class="state-box">
         <i class="fa-regular fa-folder-open"></i>
-        <span>No notices found.</span>
+        <span>${noticeSearchQuery ? `No notices matching "${escapeHTML(noticeSearchQuery)}"` : `No notices found for ${deptPreference}.`}</span>
       </div>
     `;
     return;
   }
 
-  noticeList.innerHTML = filtered.map(item => createCardHTML(item)).join("");
-  observeCards();
+  const visibleItems = filtered.slice(0, noticeVisibleCount);
+  let html = visibleItems.map(item => createCardHTML(item)).join("");
+
+  if (filtered.length > noticeVisibleCount) {
+    const remaining = filtered.length - noticeVisibleCount;
+    html += `
+      <button type="button" id="loadMoreNoticesBtn" class="load-more-btn">
+        <span>Load More (${remaining} remaining)</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+    `;
+  }
+
+  noticeList.innerHTML = html;
+
+  const loadMoreBtn = document.getElementById("loadMoreNoticesBtn");
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", () => {
+      noticeVisibleCount += PAGE_SIZE;
+      renderNotices();
+    });
+  }
 }
 
 /**
- * Render Results (Strictly filtered for selected department)
+ * Render Results (Strictly filtered & paginated for selected department)
  */
 function renderResultsView() {
   if (!resultList) return;
 
-  let results = masterDataset.filter(item => {
-    if (!item._isResult) return false;
-    const text = `${item.title || ''} ${item.department || ''} ${item.category || ''}`.toUpperCase();
-    return /\bSASTC\b/i.test(text);
-  });
+  let results = getFilteredResultsSet();
 
-  // Filter based on user's selected department
-  if (deptPreference !== "ALL") {
-    results = results.filter(item => {
-      const text = `${item.title || ''} ${item.department || ''} ${item.category || ''}`.toUpperCase();
-      return new RegExp(`\\b${deptPreference}\\b`, "i").test(text);
-    });
+  if (resultSearchQuery) {
+    const q = resultSearchQuery.toLowerCase();
+    results = results.filter(item => item._searchableText && item._searchableText.includes(q));
   }
 
   if (results.length === 0) {
     resultList.innerHTML = `
       <div class="state-box">
         <i class="fa-solid fa-square-poll-vertical"></i>
-        <span>No SASTC examination results published for ${deptPreference}.</span>
+        <span>${resultSearchQuery ? `No results matching "${escapeHTML(resultSearchQuery)}"` : `No SASTC examination results published for ${deptPreference}.`}</span>
       </div>
     `;
     return;
   }
 
-  resultList.innerHTML = results.map(item => createCardHTML(item)).join("");
-  observeCards();
+  const visibleItems = results.slice(0, resultVisibleCount);
+  let html = visibleItems.map(item => createCardHTML(item)).join("");
+
+  if (results.length > resultVisibleCount) {
+    const remaining = results.length - resultVisibleCount;
+    html += `
+      <button type="button" id="loadMoreResultsBtn" class="load-more-btn">
+        <span>Load More (${remaining} remaining)</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+    `;
+  }
+
+  resultList.innerHTML = html;
+
+  const loadMoreBtn = document.getElementById("loadMoreResultsBtn");
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", () => {
+      resultVisibleCount += PAGE_SIZE;
+      renderResultsView();
+    });
+  }
 }
 
 /**
@@ -525,6 +682,9 @@ function createCardHTML(item, options = {}) {
   if (isTextOnly) {
     textContentBase64 = encodeURIComponent(rawDesc || "No detailed description available.").replace(/'/g, "%27");
   }
+
+  // Strip heavy inline <img> tags from the 2-line preview so cards render & scroll without image layout shifts
+  const previewDesc = rawDesc ? rawDesc.replace(/<img[^>]*>/gi, "") : "";
 
   const shareHtml = options.hideCopy ? "" : `
     <button type="button" class="btn-share" onclick="shareLink('${pdfUrl}', '${titleJS}')" title="Share Link">
@@ -561,7 +721,7 @@ function createCardHTML(item, options = {}) {
       <a href="${pdfUrl}" class="notice-title" onclick="handleNoticeClick(event, '${pdfUrl}', '${titleJS}', ${noticeArg})">
         ${title}
       </a>
-      ${rawDesc ? `<div class="notice-desc-preview">${rawDesc}</div>` : ""}
+      ${previewDesc ? `<div class="notice-desc-preview">${previewDesc}</div>` : ""}
       <div class="card-footer">
         <span class="category-tag">
           <i class="fa-solid fa-tag"></i> ${escapeHTML(item.category || "General")}
@@ -641,18 +801,60 @@ function initEventListeners() {
     });
   }
 
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && pdfModal && pdfModal.classList.contains("active")) {
+      closePdfModal();
+    }
+  });
+
+  const headerBrand = document.getElementById("headerBrand");
+  if (headerBrand) {
+    headerBrand.addEventListener("click", () => {
+      triggerHaptic();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  const headerDeptBtn = document.getElementById("headerDeptBtn");
+  if (headerDeptBtn) {
+    headerDeptBtn.addEventListener("click", () => {
+      triggerHaptic();
+      switchTab("settings");
+      const selectEl = document.getElementById("deptPreferenceSelect");
+      if (selectEl) selectEl.focus();
+    });
+  }
+
+  const headerSyncBtn = document.getElementById("headerSyncBtn");
+  if (headerSyncBtn) {
+    headerSyncBtn.addEventListener("click", () => {
+      triggerHaptic();
+      syncLiveNotices(true);
+    });
+  }
+
   const bottomNav = document.querySelector(".bottom-nav");
   const appHeader = document.querySelector(".app-header");
   let lastScrollY = window.scrollY;
+  let scrollTicking = false;
+
   window.addEventListener("scroll", () => {
-    if (window.scrollY > lastScrollY && window.scrollY > 50) {
-      if (bottomNav) bottomNav.classList.add("nav-hidden");
-      if (appHeader) appHeader.classList.add("header-hidden");
-    } else {
-      if (bottomNav) bottomNav.classList.remove("nav-hidden");
-      if (appHeader) appHeader.classList.remove("header-hidden");
+    if (!scrollTicking) {
+      window.requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const delta = currentScrollY - lastScrollY;
+        if (delta > 8 && currentScrollY > 64) {
+          if (bottomNav) bottomNav.classList.add("nav-hidden");
+          if (appHeader) appHeader.classList.add("header-hidden");
+        } else if (delta < -6 || currentScrollY <= 20) {
+          if (bottomNav) bottomNav.classList.remove("nav-hidden");
+          if (appHeader) appHeader.classList.remove("header-hidden");
+        }
+        lastScrollY = currentScrollY;
+        scrollTicking = false;
+      });
+      scrollTicking = true;
     }
-    lastScrollY = window.scrollY;
   }, { passive: true });
 
   const headerOfflineIcon = document.getElementById("headerOfflineIcon");
@@ -664,20 +866,4 @@ function initEventListeners() {
   window.addEventListener("online", updateOnlineStatus);
   window.addEventListener("offline", updateOnlineStatus);
   updateOnlineStatus();
-}
-
-// Vertical Card Sliding Animation
-const scrollObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      scrollObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
-
-function observeCards() {
-  document.querySelectorAll('.card-animate:not(.visible)').forEach(card => {
-    scrollObserver.observe(card);
-  });
 }

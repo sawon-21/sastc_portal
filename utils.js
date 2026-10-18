@@ -63,8 +63,10 @@ export function debounce(func, wait = 180) {
 export function openPdfModal(url, title, textContentBase64 = null) {
   const modal = document.getElementById("pdfModal");
   const pdfFrame = document.getElementById("pdfFrame");
+  const pdfLoadingState = document.getElementById("pdfLoadingState");
   const modalTitle = document.getElementById("modalNoticeTitle");
   const modalDirectLink = document.getElementById("modalDirectLink");
+  const modalShareBtn = document.getElementById("modalShareBtn");
   const modalTextContent = document.getElementById("modalTextContent");
   const modalFooter = document.getElementById("modalFooter");
 
@@ -74,12 +76,14 @@ export function openPdfModal(url, title, textContentBase64 = null) {
 
   if (textContentBase64 && textContentBase64 !== "null") {
     // Show text mode
+    if (pdfLoadingState) pdfLoadingState.style.display = "none";
     if (pdfFrame) pdfFrame.style.display = "none";
     if (modalDirectLink) modalDirectLink.style.display = "none";
     if (modalFooter) modalFooter.style.display = "none";
     if (modalTextContent) {
       modalTextContent.style.display = "block";
-      modalTextContent.innerHTML = decodeURIComponent(textContentBase64);
+      const decoded = decodeURIComponent(textContentBase64);
+      modalTextContent.innerHTML = decoded.replace(/<img\s+/gi, '<img loading="lazy" decoding="async" ');
     }
   } else {
     // Show PDF mode
@@ -87,18 +91,27 @@ export function openPdfModal(url, title, textContentBase64 = null) {
     if (pdfFrame) {
       pdfFrame.style.display = "block";
       if (url && url !== "#") {
+        if (pdfLoadingState) pdfLoadingState.style.display = "flex";
+        pdfFrame.onload = () => {
+          if (pdfLoadingState) pdfLoadingState.style.display = "none";
+        };
         if (url.endsWith(".pdf") || url.includes("/pdf") || url.includes("drive.google")) {
           pdfFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
         } else {
           pdfFrame.src = url;
         }
       } else {
+        if (pdfLoadingState) pdfLoadingState.style.display = "none";
         pdfFrame.src = "about:blank";
       }
     }
     if (modalDirectLink) {
       modalDirectLink.style.display = "inline-flex";
       modalDirectLink.href = url || "#";
+    }
+    if (modalShareBtn) {
+      modalShareBtn.style.display = (url && url !== "#") ? "inline-flex" : "none";
+      modalShareBtn.onclick = () => shareLink(url, title || "SASTC Notice");
     }
     if (modalFooter) modalFooter.style.display = "flex";
   }
@@ -112,11 +125,16 @@ export function openPdfModal(url, title, textContentBase64 = null) {
 export function closePdfModal() {
   const modal = document.getElementById("pdfModal");
   const pdfFrame = document.getElementById("pdfFrame");
+  const pdfLoadingState = document.getElementById("pdfLoadingState");
   const bottomNav = document.querySelector(".bottom-nav");
   if (bottomNav) bottomNav.classList.remove("nav-hidden");
 
   if (modal) modal.classList.remove("active");
-  if (pdfFrame) pdfFrame.src = "about:blank";
+  if (pdfLoadingState) pdfLoadingState.style.display = "none";
+  if (pdfFrame) {
+    pdfFrame.onload = null;
+    pdfFrame.src = "about:blank";
+  }
 }
 
 let toastTimer;
@@ -198,37 +216,7 @@ export function handlePdfView(e, url, title, textContentBase64 = null) {
 }
 
 export function initSecurityProtections() {
-  document.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-    return false;
-  });
-
   document.addEventListener("dragstart", (e) => e.preventDefault());
-
-  document.addEventListener("selectstart", (e) => {
-    if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-      e.preventDefault();
-    }
-  });
-
-  document.addEventListener("keydown", (e) => {
-    const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-    const modifier = isMac ? e.metaKey : e.ctrlKey;
-    const keyLower = (e.key || "").toLowerCase();
-
-    const isF12 = e.key === "F12" || e.keyCode === 123;
-    const isInspect = modifier && e.shiftKey && (keyLower === "i" || keyLower === "j" || keyLower === "c");
-    const isViewSource = modifier && keyLower === "u";
-    const isSavePage = modifier && keyLower === "s";
-    const isPrint = modifier && keyLower === "p";
-    const isSelectAll = modifier && keyLower === "a" && e.target.tagName !== "INPUT";
-
-    if (isF12 || isInspect || isViewSource || isSavePage || isPrint || isSelectAll) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-  });
 }
 
 /**
