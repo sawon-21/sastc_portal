@@ -1,0 +1,15 @@
+{
+  "name": "sastc-portal",
+  "version": "1.0.0",
+  "description": "SASTC Portal Static Site",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "echo \"No build step required\"",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.18.0",
+    "express": "^4.21.1"
+  }
+}

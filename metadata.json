@@ -1,0 +1,8 @@
+{
+  "name": "SASTC Portal",
+  "description": "Notice board, exam results, and CGPA calculator portal with AI Academic Advisor for HSTU students.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
