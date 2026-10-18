@@ -60,13 +60,33 @@ export function debounce(func, wait = 180) {
   };
 }
 
+export function downloadPdfDirect(url, title = "SASTC_Document") {
+  if (!url || url === "#") {
+    showToast("No document available to download", "fa-circle-exclamation");
+    return;
+  }
+
+  const safeTitle = String(title).replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 60) || "SASTC_Document";
+  const filename = safeTitle.toLowerCase().endsWith(".pdf") ? safeTitle : `${safeTitle}.pdf`;
+  const downloadEndpoint = `/api/download-pdf?url=${encodeURIComponent(url)}&name=${encodeURIComponent(filename)}`;
+
+  const link = document.createElement("a");
+  link.href = downloadEndpoint;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  showToast("Downloading PDF...", "fa-download");
+}
+
 export function openPdfModal(url, title, textContentBase64 = null) {
   const modal = document.getElementById("pdfModal");
   const pdfFrame = document.getElementById("pdfFrame");
   const pdfLoadingState = document.getElementById("pdfLoadingState");
   const modalTitle = document.getElementById("modalNoticeTitle");
   const modalDirectLink = document.getElementById("modalDirectLink");
-  const modalShareBtn = document.getElementById("modalShareBtn");
+  const modalDownloadBtn = document.getElementById("modalDownloadBtn");
   const modalTextContent = document.getElementById("modalTextContent");
   const modalFooter = document.getElementById("modalFooter");
 
@@ -109,9 +129,9 @@ export function openPdfModal(url, title, textContentBase64 = null) {
       modalDirectLink.style.display = "inline-flex";
       modalDirectLink.href = url || "#";
     }
-    if (modalShareBtn) {
-      modalShareBtn.style.display = (url && url !== "#") ? "inline-flex" : "none";
-      modalShareBtn.onclick = () => shareLink(url, title || "SASTC Notice");
+    if (modalDownloadBtn) {
+      modalDownloadBtn.style.display = (url && url !== "#") ? "inline-flex" : "none";
+      modalDownloadBtn.onclick = () => downloadPdfDirect(url, title || "SASTC_Notice");
     }
     if (modalFooter) modalFooter.style.display = "flex";
   }

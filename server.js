@@ -112,6 +112,37 @@ app.post('/api/advisor', async (req, res) => {
   }
 });
 
+app.get('/api/download-pdf', async (req, res) => {
+  try {
+    const fileUrl = req.query.url;
+    const rawName = (req.query.name || 'SASTC_Document').replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+    const filename = rawName.toLowerCase().endsWith('.pdf') ? rawName : `${rawName}.pdf`;
+
+    if (!fileUrl || !/^https?:\/\//i.test(fileUrl)) {
+      return res.status(400).send('Invalid file URL');
+    }
+
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      return res.redirect(fileUrl);
+    }
+
+    const contentType = response.headers.get('content-type') || 'application/pdf';
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
+  } catch (err) {
+    if (req.query.url) {
+      return res.redirect(req.query.url);
+    }
+    res.status(500).send('Failed to download file');
+  }
+});
+
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server listening on port ${port}`);
 });

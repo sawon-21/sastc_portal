@@ -711,7 +711,7 @@ function createCardHTML(item, options = {}) {
     <div class="card card-animate">
       <div class="card-header">
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <span class="badge-dept">
+          <span class="badge-dept ${displayBadge === 'RESULT' ? 'badge-result' : ''}">
             <i class="${deptIcon}"></i> ${displayBadge}
           </span>
           ${tagHtml}

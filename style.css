@@ -450,6 +450,11 @@ body {
   contain-intrinsic-size: 0 140px;
 }
 
+#view-result #resultList > div {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+}
+
 .load-more-btn {
   width: 100%;
   background: var(--bg-card);
