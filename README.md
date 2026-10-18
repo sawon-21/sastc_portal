@@ -1,8 +1,8 @@
-# 🎓 SASTC Portal
+# 🎓 SASTC Portal (React Edition)
 
 > **SASTC & HSTU-এর সকল নোটিশ, রুটিন ও রেজাল্ট এখন এক ঠিকানায়।**
 
-**SASTC Portal** হলো SASTC শিক্ষার্থীদের জন্য তৈরি একটি সহজ, দ্রুত এবং মোবাইল-ফ্রেন্ডলি academic information portal। এর মাধ্যমে শিক্ষার্থীরা এক জায়গা থেকেই গুরুত্বপূর্ণ নোটিশ, পরীক্ষার ফলাফল, ক্লাস রুটিন, ল্যাব শিডিউল এবং অন্যান্য একাডেমিক আপডেট দেখতে পারবেন।
+**SASTC Portal** হলো SASTC শিক্ষার্থীদের জন্য তৈরি একটি আধুনিক, দ্রুত এবং প্রতিক্রিয়াশীল (React + Vite + TypeScript) academic information portal। এর মাধ্যমে শিক্ষার্থীরা এক জায়গা থেকেই গুরুত্বপূর্ণ নোটিশ, পরীক্ষার ফলাফল, ক্লাস রুটিন, সিজিপিএ ক্যালকুলেটর (CGPA Calculator) এবং জেমিনাই চালিত AI Academic Advisor দেখতে ও ব্যবহার করতে পারবেন।
 
 🔗 **Live Portal:** https://sastc.nav.bd/
 
@@ -17,28 +17,28 @@
 ## ✨ Features
 
 * 📢 **Real-time Official Notices**
-  SASTC ও HSTU-এর গুরুত্বপূর্ণ নোটিশ সহজেই দেখার সুবিধা।
+  SASTC ও HSTU-এর গুরুত্বপূর্ণ নোটিশ সরাসরি ও দ্রুত দেখার সুবিধা।
 
 * 📊 **Result Updates**
-  সেমিস্টার ফাইনাল ও অন্যান্য পরীক্ষার ফলাফল দেখার সুবিধা।
+  সেমিস্টার ফাইনাল ও অন্যান্য পরীক্ষার ফলাফল ডিপার্টমেন্ট অনুযায়ী স্বয়ংক্রিয় ফিল্টারিং সহ দেখার সুবিধা।
 
-* 📅 **Digital Class Routine**
-  Theory ও Practical class routine এক জায়গায়।
+* 🧮 **CGPA Calculator & Academic History**
+  Level 1 থেকে Level 4 এবং Semester I & II এর ডিপার্টমেন্টভিত্তিক কোর্স সিলেবাস, গ্রেড পয়েন্ট ক্যালকুলেশন এবং কিউমুলেটিভ হিস্টোরি ম্যানেজমেন্ট।
 
-* 📄 **Built-in PDF Viewer**
-  আলাদা PDF reader ছাড়াই portal-এর ভেতর PDF notice ও routine দেখার সুবিধা।
+* 🤖 **AI Academic Advisor**
+  Gemini 2.5 Flash চালিত ব্যক্তিগতকৃত একাডেমিক বিশ্লেষণ ও পরামর্শদাতা।
+
+* 📄 **Built-in Document & PDF Viewer**
+  আলাদা PDF reader ছাড়াই পোর্টালের ভেতর সরাসরি অফিসিয়াল নোটিশ ও রুটিন দেখার ও শেয়ার করার সুবিধা।
 
 * 🎯 **Department Preferences**
-  নিজের department নির্বাচন করে relevant notice দেখার সুবিধা।
+  Computer Science (CSE), B.Sc in Agriculture (AG), কিংবা Business Administration (BBA) সিলেক্ট করে প্রাসঙ্গিক নোটিশ দেখার সুবিধা।
 
-* ⚡ **Fast & Lightweight**
-  ধীরগতির internet connection-এও দ্রুত load করার জন্য lightweight interface।
+* ⚡ **Fast & Responsive**
+  React SPA + Vite আর্কিটেকচারে তাৎক্ষণিক পেজ পরিবর্তন ও ফ্লুইড নেভিগেশন।
 
-* 📱 **Mobile Friendly**
-  Desktop, tablet এবং mobile device—সব জায়গায় ব্যবহারযোগ্য।
-
-* 📲 **Installable as an App**
-  Browser থেকে **Install App / Add to Home Screen** ব্যবহার করে app-এর মতো ব্যবহার করা যায়।
+* 📲 **Installable PWA**
+  যে কোনো স্মার্টফোন কিংবা ডেস্কটপে প্রোগ্রেসিভ ওয়েব অ্যাপ হিসেবে ইন্সটলযোগ্য।
 
 ---
 
@@ -46,72 +46,35 @@
 
 | Section         | Description                                |
 | --------------- | ------------------------------------------ |
-| 🏠 **Home**     | Latest এবং গুরুত্বপূর্ণ updates            |
-| 📢 **Notice**   | Academic ও general notices                 |
-| 📊 **Result**   | Semester-wise result archive               |
-| ⚙️ **Settings** | Department preferences ও অন্যান্য settings |
+| 🏠 **Home**     | Latest ও হাইলাইট নোটিশ এবং SASTC বুলেটিন  |
+| 📢 **Notice**   | ডিপার্টমেন্টভিত্তিক একাডেমিক নোটিশ       |
+| 📊 **Result**   | সেমিস্টার পরীক্ষার রেজাল্ট আর্কাইভ        |
+| 🧮 **CGPA**     | কোর্স গ্রেডিং, টার্ম ও কিউমুলেটিভ সিজিপিএ এবং AI Advisor |
+| ⚙️ **Settings** | Department preferences, API Keys ও নোটিফিকেশন |
 
 ---
 
-## 🚀 How to Use
+## 🛠️ Technology Stack
 
-### 1. Visit the Portal
-
-যেকোনো browser থেকে নিচের link-এ যান:
-
-**https://sastc.nav.bd/**
-
-### 2. Select Your Department
-
-**Settings → Department Preferences** এ গিয়ে নিজের department নির্বাচন করুন।
-
-### 3. Browse the Portal
-
-* **Home** → Latest updates
-* **Notice** → বিভিন্ন notice
-* **Result** → Results
-* **Settings** → Personal preferences
-
-### 4. Install on Your Device
-
-Browser-এর menu থেকে:
-
-**Install App** অথবা **Add to Home Screen**
-
-নির্বাচন করে portal-টিকে আপনার device-এ app-এর মতো ব্যবহার করতে পারবেন।
+- **Frontend:** React 19, TypeScript, Tailwind CSS, Vite
+- **Backend:** Node.js, Express, tsx
+- **AI Integration:** Google Gen AI SDK (`@google/genai`)
+- **Icons & Fonts:** Font Awesome 6.5, Plus Jakarta Sans, Noto Sans Bengali
 
 ---
 
-## 🛠️ Technology
+## 🚀 Running Locally
 
-এই project-এর frontend/backend technology সম্পর্কে বিস্তারিত তথ্য repository-এর source code এবং project structure-এ পাওয়া যাবে।
+```bash
+# Install dependencies
+npm install
 
-> Projectটি বর্তমানে **actively developing** অবস্থায় রয়েছে এবং নিয়মিত নতুন feature ও improvement যোগ করা হচ্ছে।
+# Start development server
+npm run dev
 
----
-
-## 🎯 Project Goal
-
-SASTC শিক্ষার্থীদের জন্য academic information খোঁজার process আরও সহজ করা।
-
-একাধিক Facebook group, website বা message-এর মধ্যে notice খোঁজার পরিবর্তে—
-
-> **“Everything students need, in one place.”**
-
----
-
-## 🔮 Future Improvements
-
-কিছু planned improvement:
-
-* 🔔 Push notification
-* 📚 আরও department support
-* 🔎 Advanced notice search
-* 📅 Improved routine management
-* 📊 Better result tracking
-* 🌙 Dark mode improvements
-* 🔐 Student-specific features
-* 📱 আরও উন্নত PWA experience
+# Build for production
+npm run build
+```
 
 ---
 
@@ -122,23 +85,5 @@ SASTC শিক্ষার্থীদের জন্য academic information 
 Developed with ❤️ for SASTC students.
 
 ---
-
-## 🤝 Contributions
-
-এই project-এর উন্নয়নে suggestions, bug reports এবং feature requests স্বাগতম।
-
-কোনো issue বা suggestion থাকলে GitHub repository-এর **Issues** section ব্যবহার করতে পারেন।
-
----
-
-## 📢 Share
-
-আপনার SASTC-এর বন্ধু ও সহপাঠীদের সাথে portalটি share করুন, যাতে সবাই সহজে সর্বশেষ academic updates পেতে পারে।
-
-🔗 **https://sastc.nav.bd/**
-
----
-
-### ⭐ If you find this project useful, consider giving the repository a star!
 
 > **SASTC Portal — Stay Updated, Stay Connected.**

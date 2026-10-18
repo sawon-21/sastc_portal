@@ -24,7 +24,15 @@
   margin: 0;
   padding: 0;
   font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+html, body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+button, a, input, select {
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out, opacity 0.15s ease-out;
 }
 
 body {
@@ -36,7 +44,7 @@ body {
   font-size: 15px; /* Increased font base */
   padding-bottom: 95px; /* Clearance for floating bottom navbar */
   -webkit-font-smoothing: antialiased;
-  user-select: none;
+  user-select: auto;
 }
 
 /* App Header */
@@ -53,7 +61,7 @@ body {
   box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.4);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s ease-out;
 }
 
 .app-header.header-hidden {
@@ -175,12 +183,12 @@ body {
 
 .tab-view.active {
   display: block;
-  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.15s ease-out forwards;
 }
 
-@keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(12px) scale(0.99); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Hero Highlight Card */
@@ -501,13 +509,13 @@ body {
   height: 44px;
   padding: 0 16px;
   border-radius: 12px;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.18s ease-out;
   overflow: hidden;
 }
 
 .nav-item i {
   font-size: 18px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.18s ease-out;
 }
 
 .nav-item:hover {
@@ -537,10 +545,10 @@ body {
   white-space: nowrap;
   margin-left: 0;
   transform: scale(0.9);
-  transition: max-width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              margin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-              transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: max-width 0.18s ease-out, 
+              opacity 0.18s ease-out, 
+              margin 0.18s ease-out,
+              transform 0.18s ease-out;
 }
 
 .nav-badge {
@@ -973,26 +981,16 @@ body::before {
 }
 
 .card {
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease !important;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out !important;
 }
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover) !important;
-}
-
-@keyframes slideInUpFade {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05) !important;
 }
 
 .card-animate {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-.card-animate.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 #modalTextContent img {
@@ -1115,43 +1113,37 @@ body::before {
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+  contain: strict;
 }
 
 .bg-anim-icon {
   position: absolute;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   bottom: -60px;
-  opacity: 0.18; /* Max opacity around 0.18 to 0.22 */
-  animation: floatUp 30s linear infinite;
-  /* Ensure it looks like a watermark */
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.02));
+  opacity: 0.16; /* Clean ambient watermark opacity */
+  animation: floatUp 32s linear infinite;
+  will-change: transform;
 }
 
-/* Very pale tinted colors (slightly stronger base color + low opacity makes it look perfect on off-white) */
+/* Pale tinted colors */
 .anim-cse { color: #3b82f6; } /* Blue 500 */
 .anim-agri { color: #22c55e; } /* Green 500 */
 .anim-bba { color: #f59e0b; } /* Amber 500 */
 
-/* Staggered positioning, durations, and negative delays for natural continuous flow */
-.bg-anim-icon.i1  { left: 5%;  animation-duration: 32s; animation-delay: 0s; }
-.bg-anim-icon.i2  { left: 22%; animation-duration: 28s; animation-delay: -5s; }
-.bg-anim-icon.i3  { left: 45%; animation-duration: 35s; animation-delay: -10s; }
-.bg-anim-icon.i4  { left: 65%; animation-duration: 27s; animation-delay: -15s; }
-.bg-anim-icon.i5  { left: 88%; animation-duration: 31s; animation-delay: -2s; }
-.bg-anim-icon.i6  { left: 12%; animation-duration: 34s; animation-delay: -18s; }
-.bg-anim-icon.i7  { left: 35%; animation-duration: 29s; animation-delay: -22s; }
-.bg-anim-icon.i8  { left: 55%; animation-duration: 33s; animation-delay: -7s; }
-.bg-anim-icon.i9  { left: 75%; animation-duration: 26s; animation-delay: -14s; }
-.bg-anim-icon.i10 { left: 95%; animation-duration: 30s; animation-delay: -25s; }
-.bg-anim-icon.i11 { left: 8%;  animation-duration: 35s; animation-delay: -8s; }
-.bg-anim-icon.i12 { left: 30%; animation-duration: 28s; animation-delay: -20s; }
-.bg-anim-icon.i13 { left: 50%; animation-duration: 32s; animation-delay: -12s; }
-.bg-anim-icon.i14 { left: 70%; animation-duration: 29s; animation-delay: -3s; }
-.bg-anim-icon.i15 { left: 85%; animation-duration: 34s; animation-delay: -28s; }
+/* Staggered positioning and durations for smooth natural flow */
+.bg-anim-icon.i1  { left: 6%;  animation-duration: 32s; animation-delay: 0s; }
+.bg-anim-icon.i2  { left: 24%; animation-duration: 28s; animation-delay: -6s; }
+.bg-anim-icon.i3  { left: 45%; animation-duration: 36s; animation-delay: -12s; }
+.bg-anim-icon.i4  { left: 62%; animation-duration: 30s; animation-delay: -18s; }
+.bg-anim-icon.i5  { left: 85%; animation-duration: 34s; animation-delay: -4s; }
+.bg-anim-icon.i6  { left: 14%; animation-duration: 29s; animation-delay: -22s; }
+.bg-anim-icon.i7  { left: 35%; animation-duration: 33s; animation-delay: -15s; }
+.bg-anim-icon.i8  { left: 74%; animation-duration: 31s; animation-delay: -9s; }
+.bg-anim-icon.i9  { left: 92%; animation-duration: 27s; animation-delay: -25s; }
 
 @keyframes floatUp {
-  0% { transform: translateY(0) rotate(0deg) scale(0.8); }
-  50% { transform: translateY(-60vh) rotate(15deg) scale(1.1); }
-  100% { transform: translateY(-120vh) rotate(-10deg) scale(0.8); }
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -60vh, 0) rotate(10deg); }
+  100% { transform: translate3d(0, -120vh, 0) rotate(-10deg); }
 }
