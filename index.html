@@ -19,7 +19,7 @@
   <!-- Google Fonts & Font Awesome Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <link rel="stylesheet" href="style.css" />
@@ -72,22 +72,61 @@
         <h1 class="brand-title">SASTC <span class="portal-text">PORTAL</span></h1>
       </div>
     </div>
+    <span class="header-free-badge">100% Free</span>
   </header>
 
   <div class="app-container">
     <!-- TAB 1: HOME VIEW -->
     <section id="view-home" class="tab-view active">
-      <!-- Highlight Card -->
-      <div class="hero-card card-animate" id="heroLatestCard">
-        <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Latest Notice</div>
-        <h3 class="hero-title" id="heroTitle">Academic Notice</h3>
-        <p class="hero-desc" id="heroDesc">Loading latest department notice...</p>
-        <span class="hero-date" id="heroDate"><i class="fa-regular fa-clock"></i> Recent</span>
-        
-        <div class="hero-actions">
-          <button type="button" class="btn-primary" id="heroBtnView">
-            <i class="fa-solid fa-file-pdf"></i> Read Document
+      <!-- Highlight Card: Exam Dates -->
+      <div class="hero-card card-animate exam-dates-widget" id="heroLatestCard">
+        <div class="exam-widget-header">
+          <div class="exam-dates-badge">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>EXAM DATES</span>
+          </div>
+          <div class="exam-semester-pill" id="examSemesterLabel" role="button" tabindex="0" title="Click to change Level & Semester">
+            <span id="examSemesterText">LEVEL 1 SEMESTER 1</span>
+            <i class="fa-solid fa-chevron-down exam-sem-caret"></i>
+          </div>
+        </div>
+
+        <!-- Inline Level & Semester Selector Popover -->
+        <div class="exam-sem-popover" id="examSemPopover">
+          <div class="exam-sem-popover-row">
+            <div class="exam-sem-field">
+              <label for="homeExamLevelSelect">Level</label>
+              <select id="homeExamLevelSelect">
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+                <option value="3">Level 3</option>
+                <option value="4">Level 4</option>
+              </select>
+            </div>
+            <div class="exam-sem-field">
+              <label for="homeExamSemSelect">Semester</label>
+              <select id="homeExamSemSelect">
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+              </select>
+            </div>
+            <button type="button" id="saveExamSemBtn" class="exam-sem-save-btn">Save</button>
+          </div>
+        </div>
+
+        <div class="exam-cards-wrapper">
+          <div class="exam-cards-scroll" id="examCardsList">
+            <!-- Populated dynamically from CSE-Exam.js / AG-EXAM.js / BBA-Exam.js -->
+          </div>
+
+          <button type="button" class="exam-scroll-next" id="examScrollNextBtn" aria-label="Scroll right">
+            <i class="fa-solid fa-chevron-right"></i>
           </button>
+        </div>
+
+        <div class="exam-widget-footer">
+          <span class="exam-info-chip" id="examTodayChip">Today</span>
+          <span class="exam-info-summary" id="examInfoSummary">Total  Exams • Gap between:  Days avg • Exam Time: </span>
         </div>
       </div>
 
@@ -303,27 +342,98 @@
 
       
 
-            <!-- Developer Details -->
+      <!-- Developer Details -->
       <div class="settings-card card-animate dev-card">
-        <div class="dev-profile">
-          <div class="dev-avatar"><i class="fa-solid fa-code"></i></div>
+        <div class="dev-card-glow" aria-hidden="true"></div>
+
+        <!-- Profile Header -->
+        <div class="dev-top-row">
+          <div class="dev-avatar" aria-hidden="true">
+            <i class="fa-solid fa-code"></i>
+          </div>
           <div class="dev-info">
+            <div class="dev-role-badge">LEAD DEVELOPER</div>
             <h4>Mehedi Al Hasan Sawon</h4>
-            <p class="dev-org">Developed & Maintained </p>
-            <p class="dev-meta">Version 2.1.0 • Last Update: 25 Aug 2026</p>
-            <div class="dev-socials mt-2">
-              <a href="https://www.facebook.com/mehedialhasansawon" target="_blank" rel="noopener noreferrer" class="social-link fb">
-                <i class="fa-brands fa-facebook"></i> Facebook
-              </a>
-  
-            </div>
-            <br> <hr>
-            <p class="dev-org">Feedback me </p>
-              <a href="https://t.me/t9xql" target="_blank" rel="noopener noreferrer" class="social-link gh">
-                <i class="fa-brands fa-telegram"></i> Telegram
-              </a>
+            <p class="dev-org">Designed, Developed &amp; Maintained with <span class="dev-heart" aria-hidden="true">❤️</span> for SASTC Students.</p>
           </div>
         </div>
+
+        <!-- Tagline Banner: No Cost, Just Care -->
+        <div class="dev-tagline-box">
+          <div class="dev-tagline-title">
+            <span>No Cost, Just Care</span>
+          </div>
+          <p class="dev-tagline-sub">Free Access. No Fees. Made for Students.</p>
+        </div>
+
+        <!-- Version & Last Updated Pills (Single Row) -->
+        <div class="dev-meta-pills">
+          <span class="dev-pill version-pill">
+            <i class="fa-solid fa-rocket" aria-hidden="true"></i> v2.2.0
+          </span>
+          <span class="dev-pill date-pill">
+            <i class="fa-regular fa-calendar-check" aria-hidden="true"></i> Updated: 19 Oct 2026
+          </span>
+        </div>
+
+        <!-- Expandable About & Mission Section (Expanded by default) -->
+        <div class="dev-about-section">
+          <button type="button" class="dev-about-toggle open" id="devAboutToggleBtn" aria-expanded="true" aria-controls="devAboutContent">
+            <span class="dev-about-toggle-label">
+              <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+              <span>About Our Mission &amp; Features</span>
+            </span>
+            <i class="fa-solid fa-chevron-down dev-about-chevron" id="devAboutChevron" aria-hidden="true"></i>
+          </button>
+
+          <div class="dev-about-content open" id="devAboutContent">
+            <p class="dev-mission-text">
+              This platform is dedicated to providing official university notices and examination results to SASTC students completely free of charge—ensuring every student stays informed without barriers.
+            </p>
+            <div class="dev-features-list">
+              <div class="dev-feature-item">
+                <div class="dev-feature-icon notices"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i></div>
+                <div class="dev-feature-body">
+                  <strong>University Notices</strong>
+                  <span>Important academic announcements in one place.</span>
+                </div>
+              </div>
+              <div class="dev-feature-item">
+                <div class="dev-feature-icon results"><i class="fa-solid fa-square-poll-vertical" aria-hidden="true"></i></div>
+                <div class="dev-feature-body">
+                  <strong>Exam Results</strong>
+                  <span>Convenient access to examination results.</span>
+                </div>
+              </div>
+              <div class="dev-feature-item">
+                <div class="dev-feature-icon mission"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i></div>
+                <div class="dev-feature-body">
+                  <strong>Student-First Mission</strong>
+                  <span>Making academic information accessible without fees.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dev-divider"></div>
+
+        <!-- Social & Feedback Actions -->
+        <div class="dev-actions-grid">
+          <a href="https://www.facebook.com/mehedialhasansawon" target="_blank" rel="noopener noreferrer" class="social-link fb">
+            <i class="fa-brands fa-facebook" aria-hidden="true"></i>
+            <span>Facebook</span>
+          </a>
+          <a href="https://t.me/t9xql" target="_blank" rel="noopener noreferrer" class="social-link tg">
+            <i class="fa-brands fa-telegram" aria-hidden="true"></i>
+            <span>Feedback</span>
+          </a>
+        </div>
+
+        <!-- Subtle Footer Quote -->
+        <p class="dev-footer-quote">
+          &ldquo;Built with passion, shared with love, and dedicated to students.&rdquo;
+        </p>
       </div>
 
 
@@ -397,7 +507,7 @@
           <span>Loading document preview...</span>
         </div>
         <iframe id="pdfFrame" src="about:blank" title="PDF Notice Viewer"></iframe>
-        <div id="modalTextContent" class="modal-text-content" style="display:none; padding: 20px; font-size: 15px; line-height: 1.65; color: var(--text-main); white-space: pre-wrap;"></div>
+        <div id="modalTextContent" class="modal-text-content" style="display:none; padding: 20px; font-size: 17px; line-height: 1.7; color: var(--text-main); white-space: pre-wrap;"></div>
       </div>
       <div class="modal-footer" id="modalFooter">
         <button type="button" id="modalDownloadBtn" class="btn-share" aria-label="Download PDF" title="Download PDF" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 16px;">
@@ -414,7 +524,7 @@
     <div class="pwa-content">
       <img src="https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png" alt="SASTC Portal" class="pwa-app-icon" loading="lazy" decoding="async" />
       <div class="pwa-text">
-        <h4>Install SASTC Portal</h4>
+        <h4>Install SASTC Portal [1 MB] </h4>
         <p>হোম স্ক্রিনে অ্যাপ হিসেবে ইনস্টল করে দ্রুত নোটিশ পান</p>
       </div>
     </div>

@@ -236,7 +236,60 @@ export function handlePdfView(e, url, title, textContentBase64 = null) {
 }
 
 export function initSecurityProtections() {
+  // Disable drag
   document.addEventListener("dragstart", (e) => e.preventDefault());
+
+  // Disable right-click context menu
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  // Disable text selection start (except inside input/textarea/select)
+  document.addEventListener("selectstart", (e) => {
+    const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
+    if (tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT") {
+      e.preventDefault();
+    }
+  });
+
+  // Disable copy & cut shortcuts on page content
+  document.addEventListener("copy", (e) => {
+    const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
+    if (tag !== "INPUT" && tag !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener("cut", (e) => {
+    const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
+    if (tag !== "INPUT" && tag !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  });
+
+  // Block keyboard shortcuts (Ctrl/Cmd/Alt combinations, F1-F12, PrintScreen, etc.)
+  document.addEventListener("keydown", (e) => {
+    const key = (e.key || "").toLowerCase();
+
+    // Block function keys (F1 - F12)
+    if (/^f([1-9]|1[0-2])$/i.test(e.key) || e.keyCode >= 112 && e.keyCode <= 123) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+
+    // Block any Ctrl, Meta (Cmd), or Alt shortcut combinations
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+
+    // Block PrintScreen
+    if (key === "printscreen") {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, true);
 }
 
 /**

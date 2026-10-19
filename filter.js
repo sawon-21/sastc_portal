@@ -40,6 +40,7 @@ export function detectDeptCode(text) {
 
 export function isResultNotice(item) {
   if (!item) return false;
+  if (typeof item.isResult === "boolean") return item.isResult;
   if (item.isResultApi || item.category === "Result" || item.category === "ফলাফল") return true;
   const text = `${item.category || ''} ${item.title || ''} ${item.department || ''}`.toLowerCase();
   return text.includes("result") || text.includes("ফলাফল");

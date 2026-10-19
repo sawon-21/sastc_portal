@@ -26,6 +26,13 @@ import {
   formatDateString
 } from './utils.js';
 import { initCalculator } from './calculator.js';
+import * as cseExamMod from './CSE-Exam.js';
+import * as agExamMod from './AG-EXAM.js';
+import * as bbaExamMod from './BBA-Exam.js';
+
+const cseExamData = cseExamMod.cseExamData || cseExamMod.default || {};
+const agExamData = agExamMod.agExamData || agExamMod.default || {};
+const bbaExamData = bbaExamMod.bbaExamData || bbaExamMod.default || {};
 
 window.handleNoticeClick = handleNoticeClick;
 window.handlePdfView = handlePdfView;
@@ -35,6 +42,10 @@ window.shareLink = shareLink;
 // Storage Keys
 const LS_ACTIVE_DEPT = "sastc_active_dept";
 const LS_DEPT_PREF = "sastc_dept_preference";
+const LS_EXAM_LEVEL = "sastc_exam_level";
+const LS_EXAM_SEM = "sastc_exam_semester";
+const LS_EXAM_DATA_CACHE = "sastc_exam_data_cache";
+const LS_EXAM_DIV_CACHE = "sastc_exam_div_cache";
 const LS_SEEN_NOTICES_COUNT = "sastc_seen_notices_count";
 const LS_SEEN_RESULTS_COUNT = "sastc_seen_results_count";
 
@@ -42,6 +53,8 @@ const LS_SEEN_RESULTS_COUNT = "sastc_seen_results_count";
 const savedDeptPref = localStorage.getItem(LS_DEPT_PREF);
 let deptPreference = savedDeptPref || "CSE";
 let activeDept = localStorage.getItem(LS_ACTIVE_DEPT) || deptPreference;
+let examLevel = localStorage.getItem(LS_EXAM_LEVEL) || "1";
+let examSemester = localStorage.getItem(LS_EXAM_SEM) || "1";
 let activeTab = "home";
 
 let noticesData = [];
@@ -487,31 +500,275 @@ function renderAllViews() {
 /**
  * Home View Rendering
  */
-function renderHomeView() {
-  // Pre-filter data according to department preference
-  const filteredSet = deptPreference === "ALL" 
-    ? masterDataset 
-    : masterDataset.filter(item => item._deptCode === deptPreference);
+function renderExamDatesWidget() {
+  const examSemesterLabel = document.getElementById("examSemesterLabel");
+  const examSemesterText = document.getElementById("examSemesterText");
+  const examSemPopover = document.getElementById("examSemPopover");
+  const homeExamLevelSelect = document.getElementById("homeExamLevelSelect");
+  const homeExamSemSelect = document.getElementById("homeExamSemSelect");
+  const saveExamSemBtn = document.getElementById("saveExamSemBtn");
+  const examCardsList = document.getElementById("examCardsList");
+  const examScrollNextBtn = document.getElementById("examScrollNextBtn");
+  const examTodayChip = document.getElementById("examTodayChip");
+  const examInfoSummary = document.getElementById("examInfoSummary");
 
-  const heroItem = filteredSet[0] || masterDataset[0];
-  if (heroItem) {
-    const heroTitle = document.getElementById("heroTitle");
-    const heroDesc = document.getElementById("heroDesc");
-    const heroDate = document.getElementById("heroDate");
-    const heroBtnView = document.getElementById("heroBtnView");
+  if (!examCardsList) return;
 
-    if (heroTitle) heroTitle.textContent = heroItem.title || "Academic Notice";
-    if (heroDesc) heroDesc.textContent = `${heroItem.department || 'HSTU'} • ${heroItem.category || 'Notice'}`;
-    if (heroDate) heroDate.innerHTML = `<i class="fa-regular fa-clock"></i> ${heroItem.date || 'Recent'}`;
+  // Bind Level/Semester popover events once
+  if (examSemesterLabel && examSemPopover && !examSemesterLabel.dataset.bound) {
+    examSemesterLabel.dataset.bound = "true";
 
-    if (heroBtnView) {
-      const url = formatPdfUrl(heroItem.pdf || heroItem.url || heroItem.pdf_url || heroItem.link || heroItem.pdfUrl || "#");
-      heroBtnView.onclick = (e) => {
+    examSemesterLabel.addEventListener("click", (e) => {
+      e.stopPropagation();
+      triggerHaptic();
+      if (homeExamLevelSelect) homeExamLevelSelect.value = examLevel;
+      if (homeExamSemSelect) homeExamSemSelect.value = examSemester;
+      const isOpen = examSemPopover.classList.toggle("active");
+      examSemesterLabel.classList.toggle("open", isOpen);
+    });
+
+    if (saveExamSemBtn) {
+      saveExamSemBtn.addEventListener("click", () => {
         triggerHaptic();
-        handleNoticeClick(e, url, heroItem.title);
-      };
+        if (homeExamLevelSelect) examLevel = homeExamLevelSelect.value;
+        if (homeExamSemSelect) examSemester = homeExamSemSelect.value;
+        localStorage.setItem(LS_EXAM_LEVEL, examLevel);
+        localStorage.setItem(LS_EXAM_SEM, examSemester);
+        examSemPopover.classList.remove("active");
+        examSemesterLabel.classList.remove("open");
+        renderExamDatesWidget();
+        showToast(`Saved Level ${examLevel} Semester ${examSemester}`);
+      });
     }
   }
+
+  // Bind horizontal scroll button once with auto-hide behavior
+  const updateScrollBtnVisibility = () => {
+    if (!examScrollNextBtn || !examCardsList) return;
+    const maxScroll = examCardsList.scrollWidth - examCardsList.clientWidth;
+    if (maxScroll <= 6 || examCardsList.scrollLeft >= maxScroll - 8) {
+      examScrollNextBtn.classList.add("auto-hidden");
+      examScrollNextBtn.classList.remove("visible");
+    } else {
+      examScrollNextBtn.classList.remove("auto-hidden");
+      examScrollNextBtn.classList.add("visible");
+      clearTimeout(examScrollNextBtn._hideTimer);
+      examScrollNextBtn._hideTimer = setTimeout(() => {
+        examScrollNextBtn.classList.remove("visible");
+      }, 2200);
+    }
+  };
+
+  if (examScrollNextBtn && !examScrollNextBtn.dataset.bound) {
+    examScrollNextBtn.dataset.bound = "true";
+    examScrollNextBtn.addEventListener("click", () => {
+      triggerHaptic();
+      const maxScroll = examCardsList.scrollWidth - examCardsList.clientWidth;
+      if (examCardsList.scrollLeft >= maxScroll - 10) {
+        examCardsList.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        examCardsList.scrollBy({ left: 130, behavior: "smooth" });
+      }
+      setTimeout(updateScrollBtnVisibility, 320);
+    });
+
+    examCardsList.addEventListener("scroll", updateScrollBtnVisibility, { passive: true });
+    examCardsList.addEventListener("touchstart", updateScrollBtnVisibility, { passive: true });
+  }
+
+  // Update Level & Semester label
+  if (examSemesterText) {
+    examSemesterText.textContent = `LEVEL ${examLevel} SEMESTER ${examSemester}`;
+  }
+
+  // Real Today's Date (normalized to local midnight for accurate day comparison)
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const daysShort = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+  const todayFormatted = `${String(now.getDate()).padStart(2, "0")} ${monthsShort[now.getMonth()]}`;
+  if (examTodayChip) {
+    examTodayChip.textContent = todayFormatted;
+  }
+
+  // Pick department exam schedule (with localStorage offline persistence)
+  let deptMap = {
+    CSE: cseExamData,
+    AG: agExamData,
+    BBA: bbaExamData
+  };
+
+  try {
+    if (cseExamData && agExamData && bbaExamData) {
+      localStorage.setItem(LS_EXAM_DATA_CACHE, JSON.stringify(deptMap));
+    } else {
+      const cachedDeptMap = JSON.parse(localStorage.getItem(LS_EXAM_DATA_CACHE) || "null");
+      if (cachedDeptMap) deptMap = cachedDeptMap;
+    }
+  } catch (e) {
+    try {
+      const cachedDeptMap = JSON.parse(localStorage.getItem(LS_EXAM_DATA_CACHE) || "null");
+      if (cachedDeptMap) deptMap = cachedDeptMap;
+    } catch (_) {}
+  }
+
+  const currentDept = ["CSE", "AG", "BBA"].includes(deptPreference) ? deptPreference : "CSE";
+  const deptSchedule = deptMap[currentDept] || deptMap.CSE || {};
+  const rawExams = (deptSchedule[examLevel] && deptSchedule[examLevel][examSemester]) || [];
+
+  // Pre-hydrate from cached Exam Dates div in localStorage if offline & data is missing
+  if (!navigator.onLine && Object.keys(deptSchedule).length === 0) {
+    try {
+      const savedDivState = JSON.parse(localStorage.getItem(LS_EXAM_DIV_CACHE) || "null");
+      if (savedDivState) {
+        if (examSemesterText && savedDivState.semesterText) examSemesterText.textContent = savedDivState.semesterText;
+        if (examTodayChip && savedDivState.todayText) examTodayChip.textContent = savedDivState.todayText;
+        if (examCardsList && savedDivState.cardsHtml) examCardsList.innerHTML = savedDivState.cardsHtml;
+        if (examInfoSummary && savedDivState.marqueeHtml) examInfoSummary.innerHTML = savedDivState.marqueeHtml;
+        return;
+      }
+    } catch (_) {}
+  }
+
+  // Build marquee summary across all Levels (1-4) and Semesters (1-2) of the selected department
+  const marqueeEntries = [];
+  const levels = ["1", "2", "3", "4"];
+  const sems = ["1", "2"];
+
+  levels.forEach(lvl => {
+    sems.forEach(sm => {
+      const list = (deptSchedule[lvl] && deptSchedule[lvl][sm]) || [];
+      const upcomingForSem = list
+        .map(ex => {
+          const parts = String(ex.date || "").split("-").map(Number);
+          const dObj = parts.length === 3
+            ? new Date(parts[0], parts[1] - 1, parts[2])
+            : new Date(ex.date);
+          dObj.setHours(0, 0, 0, 0);
+          return { ...ex, _dateObj: dObj, _timeMs: dObj.getTime() };
+        })
+        .filter(ex => !isNaN(ex._timeMs) && ex._timeMs >= todayMidnight.getTime())
+        .sort((a, b) => a._timeMs - b._timeMs);
+
+      if (upcomingForSem.length > 0) {
+        const nextEx = upcomingForSem[0];
+        const dStr = `${String(nextEx._dateObj.getDate()).padStart(2, "0")} ${monthsShort[nextEx._dateObj.getMonth()]}`;
+        const colorKey = `l${lvl}s${sm}`;
+        marqueeEntries.push(
+          `<span class="marquee-sem-pill ${colorKey}">L${lvl} S${sm} - ${escapeHTML(dStr)} [${escapeHTML(nextEx.code)}]</span>`
+        );
+      }
+    });
+  });
+
+  if (examInfoSummary) {
+    if (marqueeEntries.length > 0) {
+      const joinedHtml = marqueeEntries.join("");
+      examInfoSummary.innerHTML = `
+        <span class="exam-marquee-track">
+          <span class="exam-marquee-group">${joinedHtml}</span>
+          <span class="exam-marquee-group" aria-hidden="true">${joinedHtml}</span>
+        </span>
+      `;
+    } else {
+      examInfoSummary.textContent = `No published upcoming exams for ${currentDept}`;
+    }
+  }
+
+  // Parse, filter out finished exams (before todayMidnight), and sort by date ascending
+  const parsedExams = rawExams.map(ex => {
+    const parts = String(ex.date || "").split("-").map(Number);
+    const dObj = parts.length === 3
+      ? new Date(parts[0], parts[1] - 1, parts[2])
+      : new Date(ex.date);
+    return {
+      ...ex,
+      _dateObj: dObj,
+      _timeMs: dObj.getTime()
+    };
+  })
+  .filter(ex => ex._timeMs >= todayMidnight.getTime())
+  .sort((a, b) => a._timeMs - b._timeMs);
+
+  if (parsedExams.length === 0) {
+    examCardsList.innerHTML = `<div class="state-box" style="width:100%; padding:14px;"><span>No upcoming exams for ${currentDept} Level ${examLevel} Semester ${examSemester}.</span></div>`;
+  } else {
+    const cardsHtml = parsedExams.map((exam, idx) => {
+      const d = exam._dateObj;
+      const dateNumStr = `${String(d.getDate()).padStart(2, "0")} ${monthsShort[d.getMonth()]}`;
+      const dayNameStr = daysShort[d.getDay()];
+      const diffFromTodayDays = Math.round((exam._timeMs - todayMidnight.getTime()) / 86400000);
+
+      // Status badge logic based on real date (first remaining exam is NEXT EXAM / TODAY)
+      let statusTagHtml = "";
+      let cardStateClass = "";
+
+      if (idx === 0) {
+        cardStateClass = "is-next";
+        const badgeLabel = diffFromTodayDays === 0 ? "TODAY" : "NEXT EXAM";
+        statusTagHtml = `<div class="exam-status-tag next"><span class="dot"></span> ${badgeLabel}</div>`;
+      } else {
+        statusTagHtml = `<div class="exam-status-tag upcoming">UPCOMING</div>`;
+      }
+
+      // Gap calculation based on real dates
+      let gapText = "GAP: --";
+      let gapClass = "neutral";
+
+      if (idx === 0) {
+        if (diffFromTodayDays > 0) {
+          gapText = `In ${diffFromTodayDays} ${diffFromTodayDays === 1 ? "Day" : "Days"}`;
+          gapClass = "neutral";
+        } else {
+          gapText = "Today";
+          gapClass = "neutral";
+        }
+      } else {
+        const prevExam = parsedExams[idx - 1];
+        const diffBetweenExams = Math.round((exam._timeMs - prevExam._timeMs) / 86400000);
+        const prepGap = diffBetweenExams > 1 ? diffBetweenExams - 1 : diffBetweenExams;
+        gapText = `GAP: ${prepGap} ${prepGap === 1 ? "Day" : "Days"}`;
+        gapClass = "teal";
+      }
+
+      return `
+        <div class="exam-slot-card ${cardStateClass}">
+          ${statusTagHtml}
+          <div class="exam-date-num">${escapeHTML(dateNumStr)}</div>
+          <div class="exam-date-day">${escapeHTML(dayNameStr)}</div>
+          <div class="exam-divider"></div>
+          <div class="exam-course-code">${escapeHTML(exam.code)}</div>
+          <div class="exam-meta-list">
+            <div class="exam-meta-item"><i class="fa-regular fa-clock"></i> <span>${escapeHTML(exam.time || "10:00 AM")}</span></div>
+          </div>
+          <div class="exam-gap-pill ${gapClass}">${escapeHTML(gapText)}</div>
+        </div>
+      `;
+    }).join("");
+
+    examCardsList.innerHTML = cardsHtml;
+  }
+
+  requestAnimationFrame(updateScrollBtnVisibility);
+
+  // Save rendered Exam Dates div state in localStorage for offline access
+  try {
+    localStorage.setItem(LS_EXAM_DIV_CACHE, JSON.stringify({
+      dept: currentDept,
+      level: examLevel,
+      semester: examSemester,
+      semesterText: examSemesterText ? examSemesterText.textContent : "",
+      todayText: examTodayChip ? examTodayChip.textContent : "",
+      cardsHtml: examCardsList.innerHTML,
+      marqueeHtml: examInfoSummary ? examInfoSummary.innerHTML : "",
+      savedAt: Date.now()
+    }));
+  } catch (_) {}
+}
+
+function renderHomeView() {
+  renderExamDatesWidget();
 
   // Fetch and Render SASTC Notices (cached in memory for fast switching)
   const sastcNoticeList = document.getElementById("sastcNoticeList");
@@ -666,7 +923,7 @@ function renderResultsView() {
  */
 function createCardHTML(item, options = {}) {
   const isResult = item._isResult !== undefined ? item._isResult : isResultNotice(item);
-  const displayBadge = isResult ? "RESULT" : (item._deptCode || detectDeptCode(`${item.department || ''} ${item.title || ''}`));
+  const displayBadge = isResult ? "RESULT" : (item._deptCode || item.deptCode || detectDeptCode(`${item.department || ''} ${item.title || ''}`));
   const deptIcon = getDeptIcon(displayBadge);
 
   const rawLink = item.pdf || item.url || item.pdf_url || item.link || item.pdfUrl || "";
@@ -830,6 +1087,17 @@ function initEventListeners() {
     headerSyncBtn.addEventListener("click", () => {
       triggerHaptic();
       syncLiveNotices(true);
+    });
+  }
+
+  const devAboutToggleBtn = document.getElementById("devAboutToggleBtn");
+  const devAboutContent = document.getElementById("devAboutContent");
+  if (devAboutToggleBtn && devAboutContent) {
+    devAboutToggleBtn.addEventListener("click", () => {
+      triggerHaptic();
+      const isOpen = devAboutContent.classList.toggle("open");
+      devAboutToggleBtn.classList.toggle("open", isOpen);
+      devAboutToggleBtn.setAttribute("aria-expanded", String(isOpen));
     });
   }
 

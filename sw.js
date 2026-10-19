@@ -2,8 +2,8 @@
  * Standalone Service Worker for Offline Caching
  */
 
-const CACHE_NAME = 'sastc-portal-v003';
-const DATA_CACHE_NAME = 'sastc-data-cache-v003';
+const CACHE_NAME = 'sastc-portal-v004';
+const DATA_CACHE_NAME = 'sastc-data-cache-v004';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -13,9 +13,14 @@ const ASSETS_TO_CACHE = [
   './api.js',
   './filter.js',
   './utils.js',
+  './calculator.js',
+  './syllabus.js',
+  './CSE-Exam.js',
+  './AG-EXAM.js',
+  './BBA-Exam.js',
   './sastc-notices.json',
   './manifest.json',
-  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap',
+  'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
   'https://i.ibb.co.com/7JnHCrB5/Chat-GPT-Image-Jul-29-2026-09-55-12-PM.png'
 ];
