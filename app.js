@@ -631,25 +631,59 @@ function renderExamDatesWidget() {
     } catch (_) {}
   }
 
+  // Helper to parse exam date + time into exact day midnight & exact exam cutoff timestamp
+  const parseExamTimings = (ex) => {
+    const parts = String(ex.date || "").split("-").map(Number);
+    const dayMidnight = parts.length === 3
+      ? new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0)
+      : new Date(ex.date);
+    dayMidnight.setHours(0, 0, 0, 0);
+
+    // Default to 10:00 AM if time string is missing
+    let hours = 10;
+    let minutes = 0;
+    const timeStr = String(ex.time || "10:00 AM").trim();
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (match) {
+      hours = parseInt(match[1], 10);
+      minutes = parseInt(match[2], 10);
+      const period = (match[3] || "").toUpperCase();
+      if (period === "PM" && hours < 12) hours += 12;
+      if (period === "AM" && hours === 12) hours = 0;
+    }
+
+    // Exam is valid through the end of its scheduled minute (e.g. 12:30:59.999 PM); at 12:31:00 PM it hides
+    const examCutoffDate = new Date(
+      dayMidnight.getFullYear(),
+      dayMidnight.getMonth(),
+      dayMidnight.getDate(),
+      hours,
+      minutes,
+      59,
+      999
+    );
+
+    return {
+      ...ex,
+      _dateObj: dayMidnight,
+      _dayMidnightMs: dayMidnight.getTime(),
+      _cutoffMs: examCutoffDate.getTime()
+    };
+  };
+
   // Build marquee summary across all Levels (1-4) and Semesters (1-2) of the selected department
   const marqueeEntries = [];
   const levels = ["1", "2", "3", "4"];
   const sems = ["1", "2"];
+  const nowMs = now.getTime();
 
   levels.forEach(lvl => {
     sems.forEach(sm => {
       const list = (deptSchedule[lvl] && deptSchedule[lvl][sm]) || [];
       const upcomingForSem = list
-        .map(ex => {
-          const parts = String(ex.date || "").split("-").map(Number);
-          const dObj = parts.length === 3
-            ? new Date(parts[0], parts[1] - 1, parts[2])
-            : new Date(ex.date);
-          dObj.setHours(0, 0, 0, 0);
-          return { ...ex, _dateObj: dObj, _timeMs: dObj.getTime() };
-        })
-        .filter(ex => !isNaN(ex._timeMs) && ex._timeMs >= todayMidnight.getTime())
-        .sort((a, b) => a._timeMs - b._timeMs);
+        .map(parseExamTimings)
+        .filter(ex => !isNaN(ex._cutoffMs) && ex._cutoffMs >= nowMs)
+        .sort((a, b) => a._cutoffMs - b._cutoffMs);
 
       if (upcomingForSem.length > 0) {
         const nextEx = upcomingForSem[0];
@@ -676,20 +710,11 @@ function renderExamDatesWidget() {
     }
   }
 
-  // Parse, filter out finished exams (before todayMidnight), and sort by date ascending
-  const parsedExams = rawExams.map(ex => {
-    const parts = String(ex.date || "").split("-").map(Number);
-    const dObj = parts.length === 3
-      ? new Date(parts[0], parts[1] - 1, parts[2])
-      : new Date(ex.date);
-    return {
-      ...ex,
-      _dateObj: dObj,
-      _timeMs: dObj.getTime()
-    };
-  })
-  .filter(ex => ex._timeMs >= todayMidnight.getTime())
-  .sort((a, b) => a._timeMs - b._timeMs);
+  // Parse, filter out finished exams (whose exact scheduled time has passed), and sort ascending
+  const parsedExams = rawExams
+    .map(parseExamTimings)
+    .filter(ex => !isNaN(ex._cutoffMs) && ex._cutoffMs >= nowMs)
+    .sort((a, b) => a._cutoffMs - b._cutoffMs);
 
   if (parsedExams.length === 0) {
     examCardsList.innerHTML = `<div class="state-box" style="width:100%; padding:14px;"><span>No upcoming exams for ${currentDept} Level ${examLevel} Semester ${examSemester}.</span></div>`;
@@ -698,7 +723,7 @@ function renderExamDatesWidget() {
       const d = exam._dateObj;
       const dateNumStr = `${String(d.getDate()).padStart(2, "0")} ${monthsShort[d.getMonth()]}`;
       const dayNameStr = daysShort[d.getDay()];
-      const diffFromTodayDays = Math.round((exam._timeMs - todayMidnight.getTime()) / 86400000);
+      const diffFromTodayDays = Math.round((exam._dayMidnightMs - todayMidnight.getTime()) / 86400000);
 
       // Status badge logic based on real date (first remaining exam is NEXT EXAM / TODAY)
       let statusTagHtml = "";
@@ -717,8 +742,14 @@ function renderExamDatesWidget() {
       let gapClass = "neutral";
 
       if (idx === 0) {
-        if (diffFromTodayDays > 0) {
-          gapText = `In ${diffFromTodayDays} ${diffFromTodayDays === 1 ? "Day" : "Days"}`;
+        if (diffFromTodayDays === 0) {
+          gapText = "Today";
+          gapClass = "neutral";
+        } else if (diffFromTodayDays === 1) {
+          gapText = "Tomorrow";
+          gapClass = "neutral";
+        } else if (diffFromTodayDays > 1) {
+          gapText = `In ${diffFromTodayDays} Days`;
           gapClass = "neutral";
         } else {
           gapText = "Today";
@@ -726,7 +757,7 @@ function renderExamDatesWidget() {
         }
       } else {
         const prevExam = parsedExams[idx - 1];
-        const diffBetweenExams = Math.round((exam._timeMs - prevExam._timeMs) / 86400000);
+        const diffBetweenExams = Math.round((exam._dayMidnightMs - prevExam._dayMidnightMs) / 86400000);
         const prepGap = diffBetweenExams > 1 ? diffBetweenExams - 1 : diffBetweenExams;
         gapText = `GAP: ${prepGap} ${prepGap === 1 ? "Day" : "Days"}`;
         gapClass = "teal";
@@ -748,6 +779,13 @@ function renderExamDatesWidget() {
     }).join("");
 
     examCardsList.innerHTML = cardsHtml;
+  }
+
+  // Schedule automatic re-check every 30 seconds so exams hide immediately when their minute passes
+  if (!window._examAutoRefreshTimer) {
+    window._examAutoRefreshTimer = setInterval(() => {
+      renderExamDatesWidget();
+    }, 30000);
   }
 
   requestAnimationFrame(updateScrollBtnVisibility);
