@@ -130,6 +130,120 @@
         </div>
       </div>
 
+      <!-- Daily Check-in — Rewards Widget -->
+      <div class="daily-checkin-wrapper card-animate" id="dailyCheckinWidget">
+        <div class="checkin-section-bar">
+          <div class="checkin-section-title">
+            <i class="fa-solid fa-fire-flame-curved"></i>
+            <span>Daily Check-in — Rewards</span>
+          </div>
+          <button type="button" class="checkin-info-trigger" id="openCampaignModalBtn">
+            <i class="fa-solid fa-gift"></i>
+            <span>Google Pro Offer</span>
+          </button>
+        </div>
+
+        <!-- Top Streak Card (Matches Uploaded UI) -->
+        <div class="daily-checkin-top-card" id="checkinTopCard">
+          <div class="checkin-top-header">
+            <div class="checkin-top-copy">
+              <p class="checkin-subtitle-top" id="checkinTopSubtitle">Check in every day to earn Google Pro</p>
+              <h2 class="checkin-streak-heading" id="checkinStreakTitle">0-day streak</h2>
+              <p class="checkin-streak-sub" id="checkinStreakSub">Keep going! Nov 1 – Nov 7, 2026</p>
+            </div>
+            <div class="checkin-flame-wrap" aria-hidden="true">
+              <svg class="checkin-flame-svg" viewBox="0 0 120 135" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="flameGlow" cx="50%" cy="65%" r="50%">
+                    <stop offset="0%" stop-color="#FF9900" stop-opacity="0.45"/>
+                    <stop offset="100%" stop-color="#FF3B00" stop-opacity="0"/>
+                  </radialGradient>
+                  <linearGradient id="outerFlame" x1="60" y1="8" x2="60" y2="126" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#FF9E2C"/>
+                    <stop offset="45%" stop-color="#FF5B14"/>
+                    <stop offset="100%" stop-color="#E01E00"/>
+                  </linearGradient>
+                  <linearGradient id="midFlame" x1="60" y1="32" x2="60" y2="122" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#FFD43B"/>
+                    <stop offset="60%" stop-color="#FF8800"/>
+                    <stop offset="100%" stop-color="#FF3D00"/>
+                  </linearGradient>
+                  <linearGradient id="innerFlame" x1="60" y1="62" x2="60" y2="120" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#FFF9C4"/>
+                    <stop offset="45%" stop-color="#FFE047"/>
+                    <stop offset="100%" stop-color="#FF9800"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="60" cy="82" r="46" fill="url(#flameGlow)"/>
+                <!-- Floating embers -->
+                <path d="M28 42C26 35 31 28 34 24C34 31 37 35 33 42C31 45 29 45 28 42Z" fill="#FF7A1A"/>
+                <path d="M94 52C92 46 96 40 99 37C99 43 101 46 98 52C96 54 95 54 94 52Z" fill="#FF7A1A"/>
+                <!-- Outer 3D Flame -->
+                <path d="M62 10C65 26 53 38 56 52C63 45 72 34 73 22C92 38 104 63 100 88C96 112 78 126 58 126C36 126 18 110 18 85C18 63 31 47 41 37C39 46 42 54 47 57C43 41 49 21 62 10Z" fill="url(#outerFlame)"/>
+                <!-- Mid Flame -->
+                <path d="M60 36C64 48 56 58 58 68C64 62 71 54 71 45C84 56 91 74 88 92C85 110 72 122 58 122C42 122 30 110 30 91C30 75 40 62 49 53C48 60 50 66 54 69C51 57 53 44 60 36Z" fill="url(#midFlame)"/>
+                <!-- Inner Core Heart -->
+                <path d="M59 66C63 75 76 83 75 97C74 111 66 120 58 120C49 120 42 111 42 98C42 85 52 76 59 66Z" fill="url(#innerFlame)"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 7-Day Row (Nov 1 – Nov 7, 2026) -->
+          <div class="checkin-days-grid" id="checkinDaysGrid">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+
+        <!-- Bottom Action Card (Matches Uploaded UI) -->
+        <div class="daily-checkin-bottom-card" id="checkinBottomCard">
+          <div class="checkin-bottom-inner">
+            <div class="checkin-reward-info">
+              <span class="checkin-reward-label" id="checkinRewardLabel">Today's reward</span>
+              <div class="checkin-reward-main">
+                <span class="checkin-reward-big" id="checkinRewardBig">+1 Day</span>
+                <span class="checkin-reward-unit" id="checkinRewardUnit">Google Pro Streak</span>
+              </div>
+              <span class="checkin-reward-perks" id="checkinRewardPerks">Gemini AI Pro • Flow • Meet • 5000GB Storage</span>
+            </div>
+
+            <div class="checkin-cta-wrap">
+              <button type="button" class="btn-checkin-action" id="checkinActionBtn">
+                Check-in
+              </button>
+            </div>
+          </div>
+
+          <!-- Completed 7-Day WhatsApp AI Bot & Secret Code Banner -->
+          <div class="checkin-winner-banner" id="checkinWinnerBanner" style="display: none;">
+            <div class="checkin-winner-text">
+              <i class="fa-solid fa-trophy"></i>
+              <div>
+                <strong>অভিনন্দন! ৭ দিনের চেক-ইন সম্পন্ন হয়েছে!</strong>
+                <span>নিচের <strong>6-Digit Secret Code</strong>-সহ এই অংশের একটি <strong>Screenshot</strong> নিন এবং <strong>WhatsApp AI Bot</strong> বাটনে ক্লিক করে সাবমিট করুন:</span>
+              </div>
+            </div>
+
+            <div class="secret-code-card">
+              <div class="secret-code-meta">
+                <span><i class="fa-solid fa-shield-halved"></i> SECRET REWARD CODE</span>
+                <span class="device-lock-tag" id="cardDeviceIdTag">1-DEVICE VERIFIED</span>
+              </div>
+              <div class="secret-code-row">
+                <div class="secret-code-digits" id="checkinCardSecretCode">------</div>
+                <button type="button" class="btn-copy-secret" id="copyCardSecretBtn" title="Copy Code">
+                  <i class="fa-regular fa-copy"></i> Copy
+                </button>
+              </div>
+            </div>
+
+            <a href="https://wa.me/qr/KD2ML6XBFZ4OJ1" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-claim" id="checkinWhatsappDirectBtn">
+              <i class="fa-brands fa-whatsapp"></i>
+              <span>Submit to WhatsApp AI Bot</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
 
       <!-- SASTC Notices Section -->
       <div class="section-header">
@@ -581,6 +695,134 @@
 
       <div class="popup-dev-credit">
         Developed by <strong>Mehedi Al Hasan Sawon</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Check-in Campaign & Grand Reward Popup Modal -->
+  <div id="checkinCampaignModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="campaignModalTitle">
+    <div class="campaign-modal-card">
+      <button type="button" class="campaign-modal-close" id="closeCampaignModalBtn" aria-label="Close campaign popup">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Hero Banner Top -->
+      <div class="campaign-hero-banner">
+        <div class="campaign-live-tag">
+          <span class="campaign-live-dot"></span>
+          <span>MEGA CAMPAIGN • NOV 1 – NOV 7, 2026</span>
+        </div>
+        <div class="campaign-hero-icon-row">
+          <div class="campaign-fire-badge">
+            <i class="fa-solid fa-fire-flame-curved"></i>
+          </div>
+          <div class="campaign-plus-sign">+</div>
+          <div class="campaign-google-badge">
+            <i class="fa-brands fa-google"></i>
+            <span>PRO</span>
+          </div>
+        </div>
+        <h2 id="campaignModalTitle">সম্পূর্ণ নভেম্বর মাস Google All-Platform PRO ফ্রি!</h2>
+        <p class="campaign-hero-sub">
+          টানা <strong>৭ দিন (১ নভেম্বর – ৭ নভেম্বর ২০২৬)</strong> ডেইলি চেক-ইন সম্পন্ন করলেই পাচ্ছেন পুরো নভেম্বর মাসের জন্য <strong>Google Ecosystem Pro Subscription</strong> সম্পূর্ণ বিনামূল্যে!
+        </p>
+      </div>
+
+      <div class="campaign-modal-body">
+        <!-- Winner Celebration Box (Visible when 7/7 days claimed) -->
+        <div class="campaign-winner-box" id="campaignModalWinnerBox" style="display: none;">
+          <div class="campaign-winner-header">
+            <i class="fa-solid fa-crown"></i>
+            <span>অভিনন্দন! ৭ দিনের স্ট্রিক সম্পন্ন হয়েছে!</span>
+          </div>
+          <p>
+            আপনার জন্য একটি ইউনিক <strong>6-Digit Verification Code</strong> তৈরি হয়েছে। অফারটি পেতে <strong>এই স্ক্রিনের একটি Screenshot নিন</strong> এবং নিচের <strong>WhatsApp AI Bot</strong> বাটনে ক্লিক করে সাবমিট করুন:
+          </p>
+
+          <div class="secret-code-card modal-secret-card">
+            <div class="secret-code-meta">
+              <span><i class="fa-solid fa-key"></i> YOUR 6-DIGIT REWARD CODE</span>
+              <span class="device-lock-tag" id="modalDeviceIdTag">VERIFIED</span>
+            </div>
+            <div class="secret-code-row">
+              <div class="secret-code-digits" id="campaignModalSecretCode">------</div>
+              <button type="button" class="btn-copy-secret" id="copyModalSecretBtn">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+            <div class="screenshot-hint-pill">
+              <i class="fa-solid fa-camera"></i> কোডসহ স্ক্রিনশট নিয়ে WhatsApp AI Bot-এ পাঠান
+            </div>
+          </div>
+
+          <a href="https://wa.me/qr/KD2ML6XBFZ4OJ1" target="_blank" rel="noopener noreferrer" class="btn-campaign-whatsapp">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>WhatsApp AI Bot-এ সাবমিট করুন</span>
+          </a>
+        </div>
+
+        <!-- Exciting Perks Grid -->
+        <div class="campaign-perks-title">🎁 যা যা থাকছে এই মেগা রিওয়ার্ডে:</div>
+        <div class="campaign-perks-list">
+          <div class="campaign-perk-item">
+            <div class="perk-icon gemini"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="perk-text">
+              <strong>Gemini AI Pro (Unlimited Image & Video Gen)</strong>
+              <span>আনলিমিটেড প্রো ইমেজ ও AI ভিডিও জেনারেশন, ডিপ রিসার্চ ও কোডিং অ্যাসিস্ট্যান্ট</span>
+            </div>
+          </div>
+
+          <div class="campaign-perk-item">
+            <div class="perk-icon flow"><i class="fa-solid fa-clapperboard"></i></div>
+            <div class="perk-text">
+              <strong>Google Flow & Creative AI Suite</strong>
+              <span>সিনেমাটিক এআই ভিডিও ক্রিয়েশন এবং Google-এর সকল প্রো প্ল্যাটফর্ম অ্যাক্সেস</span>
+            </div>
+          </div>
+
+          <div class="campaign-perk-item">
+            <div class="perk-icon meet"><i class="fa-solid fa-video"></i></div>
+            <div class="perk-text">
+              <strong>Google Meet Premium</strong>
+              <span>গ্রুপ স্টাডি ও প্রজেক্টের জন্য HD ভিডিও কলিং, নয়েজ ক্যান্সেলেশন ও আনলিমিটেড মিটিং</span>
+            </div>
+          </div>
+
+          <div class="campaign-perk-item">
+            <div class="perk-icon storage"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <div class="perk-text">
+              <strong>5,000 GB (5 TB) Cloud Storage Reward</strong>
+              <span>Google Drive, Google Photos ও Gmail-এর জন্য বিশাল ৫০০০ জিবি প্রিমিয়াম স্টোরেজ!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strict Rules Warning Box -->
+        <div class="campaign-rules-box" id="campaignRulesBox">
+          <div class="rules-title">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>ক্যাম্পেইনের জরুরি নিয়ম ও শর্তাবলী (Rules):</span>
+          </div>
+          <ul>
+            <li>🔒 <strong>১টি ডিভাইস থেকে শুধুমাত্র ১ বারই</strong> ক্যাম্পেইনে জয়েন করা যাবে (One Device = 1 Join Only)।</li>
+            <li>📅 ক্যাম্পেইন চলবে <strong>১ নভেম্বর ২০২৬</strong> থেকে <strong>৭ নভেম্বর ২০২৬</strong> পর্যন্ত। প্রতিদিন পোর্টালে ঢুকে <strong>Check-in / Claim</strong> করতে হবে।</li>
+            <li>⚠️ <strong>১ দিন মিস করলেই স্ট্রিক বাতিল হয়ে যাবে</strong> এবং ওই ডিভাইস থেকে আর জয়েন বা ক্লেইম করা যাবে না!</li>
+            <li>📸 <strong>কোডসহ একটি স্ক্রিনশট (Screenshot) নিয়ে "WhatsApp AI Bot" বাটনে ক্লিক করে সাবমিট করতে হবে।</strong></li>
+          </ul>
+        </div>
+
+        <!-- Live Progress Pill inside Modal -->
+        <div class="campaign-status-strip" id="campaignModalStatusStrip">
+          <span id="campaignModalStatusText">Status: Not Joined Yet</span>
+          <strong id="campaignModalStreakBadge">0 / 7 Days</strong>
+        </div>
+      </div>
+
+      <div class="campaign-modal-footer">
+        <button type="button" class="btn-campaign-primary" id="campaignModalActionBtn">
+          <i class="fa-solid fa-rocket"></i>
+          <span>Join Campaign Now</span>
+        </button>
       </div>
     </div>
   </div>

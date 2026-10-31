@@ -111,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavTabs();
   initPwaInstall();
   initCalculator();
+  initDailyCheckinCampaign();
   updateHeaderDeptPill();
 
   renderAllViews();
@@ -221,6 +222,13 @@ function initFirstVisitDeptPopup() {
     renderAllViews();
     updateBadges();
     showToast(`Department set to ${deptPreference}`);
+
+    // Show Daily Check-in Campaign popup after onboarding completes
+    setTimeout(() => {
+      if (typeof window.openDailyCheckinPopup === "function") {
+        window.openDailyCheckinPopup();
+      }
+    }, 450);
   });
 }
 
@@ -1173,3 +1181,844 @@ function initEventListeners() {
   window.addEventListener("offline", updateOnlineStatus);
   updateOnlineStatus();
 }
+
+/**
+ * ============================================================================
+ * SECURE DAILY CHECK-IN — REWARDS CAMPAIGN (NOV 1, 2026 – NOV 7, 2026)
+ * One Device = One Join | Tamper-Protected | 6-Char Secret Code (a-e, 1-5)
+ * ============================================================================
+ */
+const LS_CHECKIN_STATE = "sastc_daily_checkin_2026";
+const LS_CHECKIN_RECORD = "sastc_checkin_claim_record";
+const LS_CHECKIN_FINISHED = "sastc_checkin_finished";
+const LS_DEVICE_LOCK_KEY = "sastc_device_campaign_lock_v1";
+const COOKIE_LOCK_NAME = "sastc_c_lock_v1";
+const IDB_NAME = "SASTCSecureCampaignDB";
+const IDB_STORE = "device_vault";
+const WHATSAPP_REWARD_URL = "https://wa.me/qr/KD2ML6XBFZ4OJ1";
+const ALLOWED_CODE_CHARS = "abcde12345"; // 10 characters: a-e and 1-5
+const SECURITY_SALT = "SASTC_HSTU_NOV2026_PRO_VAULT_99x";
+
+const CAMPAIGN_DAYS = [
+  { dayNum: 1, date: "2026-11-01", shortDay: "Sun", label: "Nov 1" },
+  { dayNum: 2, date: "2026-11-02", shortDay: "Mon", label: "Nov 2" },
+  { dayNum: 3, date: "2026-11-03", shortDay: "Tue", label: "Nov 3" },
+  { dayNum: 4, date: "2026-11-04", shortDay: "Wed", label: "Nov 4" },
+  { dayNum: 5, date: "2026-11-05", shortDay: "Thu", label: "Nov 5" },
+  { dayNum: 6, date: "2026-11-06", shortDay: "Fri", label: "Nov 6" },
+  { dayNum: 7, date: "2026-11-07", shortDay: "Sat", label: "Nov 7" }
+];
+
+function fnv1aHash(str) {
+  let h1 = 0x811c9dc5;
+  let h2 = 0x811c9dc5 ^ 0x4b13a92d;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 ^= ch;
+    h1 = Math.imul(h1, 0x01000193);
+    h2 ^= ch ^ (i & 0xff);
+    h2 = Math.imul(h2, 0x01000193);
+  }
+  return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
+}
+
+function computeHardwareDeviceId() {
+  try {
+    const signals = [
+      navigator.platform || "",
+      navigator.language || "",
+      String(navigator.hardwareConcurrency || ""),
+      String(navigator.deviceMemory || ""),
+      String(screen.width || 0) + "x" + String(screen.height || 0),
+      String(screen.colorDepth || 0),
+      String(window.devicePixelRatio || 1),
+      Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+    ];
+
+    // Canvas 2D hardware raster fingerprint
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 160;
+      canvas.height = 36;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.textBaseline = "top";
+        ctx.font = "14px 'Arial'";
+        ctx.fillStyle = "#f60";
+        ctx.fillRect(10, 1, 62, 20);
+        ctx.fillStyle = "#069";
+        ctx.fillText("SASTC-2026-LOCK", 2, 12);
+        signals.push(canvas.toDataURL().slice(-64));
+      }
+    } catch (_) {}
+
+    // WebGL GPU renderer fingerprint
+    try {
+      const glCanvas = document.createElement("canvas");
+      const gl = glCanvas.getContext("webgl") || glCanvas.getContext("experimental-webgl");
+      if (gl) {
+        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+        if (debugInfo) {
+          signals.push(String(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || ""));
+          signals.push(String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || ""));
+        }
+      }
+    } catch (_) {}
+
+    const digest = fnv1aHash(signals.join("|"));
+    return "DEV-" + digest.slice(0, 10).toUpperCase();
+  } catch (e) {
+    return "DEV-FALLBACK01";
+  }
+}
+
+const CURRENT_DEVICE_ID = computeHardwareDeviceId();
+
+/**
+ * Generates a 6-character random code strictly using characters (a-e and 1-5)
+ */
+function generateSixCharRewardCode() {
+  const randomValues = new Uint32Array(6);
+  if (window.crypto && window.crypto.getRandomValues) {
+    window.crypto.getRandomValues(randomValues);
+  } else {
+    for (let i = 0; i < 6; i++) {
+      randomValues[i] = Math.floor(Math.random() * 100000);
+    }
+  }
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += ALLOWED_CODE_CHARS[randomValues[i] % ALLOWED_CODE_CHARS.length];
+  }
+  return result;
+}
+
+function isValidRewardCode(code) {
+  return typeof code === "string" && /^[a-e1-5]{6}$/.test(code);
+}
+
+function computeStateSignature(state) {
+  const claimedKey = CAMPAIGN_DAYS.map(d => `${d.date}:${state.claimedDays && state.claimedDays[d.date] ? 1 : 0}`).join(",");
+  const raw = [
+    SECURITY_SALT,
+    CURRENT_DEVICE_ID,
+    state.joined ? "J1" : "J0",
+    claimedKey,
+    state.missed ? "M1" : "M0",
+    state.finished ? "F1" : "F0",
+    state.rewardCode || "NONE"
+  ].join("|");
+  return fnv1aHash(raw);
+}
+
+function setBackupCookie(state) {
+  try {
+    const compact = {
+      d: CURRENT_DEVICE_ID,
+      j: state.joined ? 1 : 0,
+      ja: state.joinedAt,
+      c: state.claimedDays,
+      m: state.missed ? 1 : 0,
+      md: state.missedDate,
+      f: state.finished ? 1 : 0,
+      rc: state.rewardCode,
+      s: state.signature
+    };
+    const encoded = encodeURIComponent(btoa(JSON.stringify(compact)));
+    document.cookie = `${COOKIE_LOCK_NAME}=${encoded}; max-age=31536000; path=/; SameSite=Lax`;
+  } catch (_) {}
+}
+
+function readBackupCookie() {
+  try {
+    const match = document.cookie.split("; ").find(row => row.startsWith(`${COOKIE_LOCK_NAME}=`));
+    if (!match) return null;
+    const val = match.split("=")[1];
+    const compact = JSON.parse(atob(decodeURIComponent(val)));
+    if (!compact || compact.d !== CURRENT_DEVICE_ID) return null;
+    return {
+      deviceId: compact.d,
+      joined: Boolean(compact.j),
+      joinedAt: compact.ja || null,
+      claimedDays: compact.c || {},
+      missed: Boolean(compact.m),
+      missedDate: compact.md || null,
+      finished: Boolean(compact.f),
+      rewardCode: compact.rc || null,
+      signature: compact.s || null
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+function saveToIndexedDBVault(state) {
+  try {
+    if (!window.indexedDB) return;
+    const req = window.indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { keyPath: "deviceId" });
+      }
+    };
+    req.onsuccess = (e) => {
+      try {
+        const db = e.target.result;
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).put({ ...state, deviceId: CURRENT_DEVICE_ID });
+      } catch (_) {}
+    };
+  } catch (_) {}
+}
+
+function loadFromIndexedDBVault() {
+  return new Promise((resolve) => {
+    try {
+      if (!window.indexedDB) return resolve(null);
+      const req = window.indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE, { keyPath: "deviceId" });
+        }
+      };
+      req.onsuccess = (e) => {
+        try {
+          const db = e.target.result;
+          const tx = db.transaction(IDB_STORE, "readonly");
+          const getReq = tx.objectStore(IDB_STORE).get(CURRENT_DEVICE_ID);
+          getReq.onsuccess = () => resolve(getReq.result || null);
+          getReq.onerror = () => resolve(null);
+        } catch (_) {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    } catch (_) {
+      resolve(null);
+    }
+  });
+}
+
+function getLocalTodayStr() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getDefaultCheckinState() {
+  const initial = {
+    campaignId: "nov_1_7_2026_google_pro",
+    deviceId: CURRENT_DEVICE_ID,
+    startDate: "2026-11-01",
+    endDate: "2026-11-07",
+    joined: false,
+    joinedAt: null,
+    claimedDays: {
+      "2026-11-01": false,
+      "2026-11-02": false,
+      "2026-11-03": false,
+      "2026-11-04": false,
+      "2026-11-05": false,
+      "2026-11-06": false,
+      "2026-11-07": false
+    },
+    claimTimestamps: {},
+    streakCount: 0,
+    missed: false,
+    missedDate: null,
+    finished: false,
+    finishedAt: null,
+    rewardCode: null,
+    rewardWhatsappUrl: WHATSAPP_REWARD_URL,
+    signature: null
+  };
+  initial.signature = computeStateSignature(initial);
+  return initial;
+}
+
+function sanitizeAndVerifyLoadedState(candidate, backup) {
+  const fallback = getDefaultCheckinState();
+  const todayStr = getLocalTodayStr();
+
+  // Merge candidate and backup monotonically so a user cannot delete localStorage to reset a missed streak or re-join
+  const source = candidate || backup;
+  if (!source) return fallback;
+
+  // Verify cryptographic signature if present; if tampered in localStorage, fall back to cookie backup or reject forged future claims
+  let trusted = source;
+  if (candidate && candidate.signature) {
+    const expectedSig = computeStateSignature(candidate);
+    if (expectedSig !== candidate.signature) {
+      // Tampering detected in localStorage!
+      trusted = backup && backup.signature === computeStateSignature(backup) ? backup : fallback;
+    }
+  }
+
+  const mergedClaimed = { ...fallback.claimedDays };
+  CAMPAIGN_DAYS.forEach(d => {
+    // A day cannot be claimed in the future (prevents DevTools manual true injection for future dates)
+    const fromTrusted = Boolean(trusted.claimedDays && trusted.claimedDays[d.date] === true);
+    const fromBackup = Boolean(backup && backup.claimedDays && backup.claimedDays[d.date] === true);
+    if (d.date <= todayStr && (fromTrusted || fromBackup)) {
+      mergedClaimed[d.date] = true;
+    } else {
+      mergedClaimed[d.date] = false;
+    }
+  });
+
+  const joined = Boolean(
+    trusted.joined ||
+    (backup && backup.joined) ||
+    localStorage.getItem(LS_DEVICE_LOCK_KEY) === CURRENT_DEVICE_ID
+  );
+
+  const state = {
+    ...fallback,
+    ...trusted,
+    deviceId: CURRENT_DEVICE_ID,
+    joined,
+    joinedAt: trusted.joinedAt || (backup && backup.joinedAt) || (joined ? new Date().toISOString() : null),
+    claimedDays: mergedClaimed,
+    missed: Boolean(trusted.missed || (backup && backup.missed)),
+    missedDate: trusted.missedDate || (backup && backup.missedDate) || null,
+    rewardCode: isValidRewardCode(trusted.rewardCode)
+      ? trusted.rewardCode
+      : backup && isValidRewardCode(backup.rewardCode)
+      ? backup.rewardCode
+      : null
+  };
+
+  return state;
+}
+
+function loadCheckinState() {
+  const cookieBackup = readBackupCookie();
+  try {
+    const raw = localStorage.getItem(LS_CHECKIN_STATE);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return sanitizeAndVerifyLoadedState(parsed, cookieBackup);
+  } catch (e) {
+    return sanitizeAndVerifyLoadedState(null, cookieBackup);
+  }
+}
+
+function saveCheckinState(state) {
+  try {
+    state.deviceId = CURRENT_DEVICE_ID;
+    state.signature = computeStateSignature(state);
+    localStorage.setItem(LS_CHECKIN_STATE, JSON.stringify(state));
+    localStorage.setItem(LS_CHECKIN_RECORD, JSON.stringify(state.claimedDays));
+    localStorage.setItem(LS_CHECKIN_FINISHED, String(Boolean(state.finished)));
+    if (state.joined) {
+      localStorage.setItem(LS_DEVICE_LOCK_KEY, CURRENT_DEVICE_ID);
+    }
+    setBackupCookie(state);
+    saveToIndexedDBVault(state);
+  } catch (e) {
+    console.warn("Could not save check-in state", e);
+  }
+}
+
+function evaluateAndSyncCheckinState(state) {
+  const todayStr = getLocalTodayStr();
+
+  // Count consecutive claimed days from Day 1 (Nov 1)
+  let streak = 0;
+  for (const day of CAMPAIGN_DAYS) {
+    if (state.claimedDays[day.date] === true) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  state.streakCount = streak;
+
+  // Check if all 7 days are claimed
+  const allSevenClaimed = CAMPAIGN_DAYS.every(d => state.claimedDays[d.date] === true);
+  if (allSevenClaimed && !state.missed) {
+    state.finished = true;
+    state.missed = false;
+    state.missedDate = null;
+    if (!state.finishedAt) {
+      state.finishedAt = new Date().toISOString();
+    }
+    if (!isValidRewardCode(state.rewardCode)) {
+      state.rewardCode = generateSixCharRewardCode();
+    }
+    saveCheckinState(state);
+    return state;
+  } else {
+    state.finished = false;
+  }
+
+  // Enforce strict consecutive rule: if any campaign day strictly before today was NOT claimed, streak is broken
+  let missedDayFound = null;
+  for (const day of CAMPAIGN_DAYS) {
+    if (day.date < todayStr && state.claimedDays[day.date] !== true) {
+      missedDayFound = day.date;
+      break;
+    }
+  }
+
+  if (missedDayFound) {
+    state.missed = true;
+    state.missedDate = missedDayFound;
+  } else if (todayStr > "2026-11-07" && !state.finished) {
+    state.missed = true;
+    state.missedDate = "2026-11-07";
+  } else {
+    state.missed = false;
+    state.missedDate = null;
+  }
+
+  saveCheckinState(state);
+  return state;
+}
+
+function getRosetteBadgeSVG(status) {
+  // Scalloped 12-point rosette badge matching the uploaded screenshot UI
+  const fill =
+    status === "claimed"
+      ? "#5b46f6"
+      : status === "missed"
+      ? "#ef4444"
+      : "#9ca3af";
+
+  const iconPath =
+    status === "missed"
+      ? `<path d="M9.5 9.5L14.5 14.5M14.5 9.5L9.5 14.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`
+      : `<path d="M8.5 12.3L10.9 14.7L15.8 9.6" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  return `
+    <svg class="checkin-badge-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 1.8C13.1 1.8 14.1 2.5 14.6 3.5C15.6 3.1 16.8 3.3 17.6 4.1C18.4 4.9 18.6 6.1 18.2 7.1C19.2 7.6 19.9 8.6 19.9 9.7C19.9 10.8 19.2 11.8 18.2 12.3C18.6 13.3 18.4 14.5 17.6 15.3C16.8 16.1 15.6 16.3 14.6 15.9C14.1 16.9 13.1 17.6 12 17.6C10.9 17.6 9.9 16.9 9.4 15.9C8.4 16.3 7.2 16.1 6.4 15.3C5.6 14.5 5.4 13.3 5.8 12.3C4.8 11.8 4.1 10.8 4.1 9.7C4.1 8.6 4.8 7.6 5.8 7.1C5.4 6.1 5.6 4.9 6.4 4.1C7.2 3.3 8.4 3.1 9.4 3.5C9.9 2.5 10.9 1.8 12 1.8Z" transform="translate(0, 2.3)" fill="${fill}"/>
+      ${iconPath}
+    </svg>
+  `;
+}
+
+function initDailyCheckinCampaign() {
+  const daysGrid = document.getElementById("checkinDaysGrid");
+  const streakTitle = document.getElementById("checkinStreakTitle");
+  const streakSub = document.getElementById("checkinStreakSub");
+  const topSubtitle = document.getElementById("checkinTopSubtitle");
+  const rewardLabel = document.getElementById("checkinRewardLabel");
+  const rewardBig = document.getElementById("checkinRewardBig");
+  const rewardUnit = document.getElementById("checkinRewardUnit");
+  const rewardPerks = document.getElementById("checkinRewardPerks");
+  const actionBtn = document.getElementById("checkinActionBtn");
+  const winnerBanner = document.getElementById("checkinWinnerBanner");
+
+  const cardSecretCodeEl = document.getElementById("checkinCardSecretCode");
+  const modalSecretCodeEl = document.getElementById("campaignModalSecretCode");
+  const cardDeviceIdTag = document.getElementById("cardDeviceIdTag");
+  const modalDeviceIdTag = document.getElementById("modalDeviceIdTag");
+  const copyCardSecretBtn = document.getElementById("copyCardSecretBtn");
+  const copyModalSecretBtn = document.getElementById("copyModalSecretBtn");
+
+  const openModalBtn = document.getElementById("openCampaignModalBtn");
+  const campaignModal = document.getElementById("checkinCampaignModal");
+  const closeCampaignModalBtn = document.getElementById("closeCampaignModalBtn");
+  const modalActionBtn = document.getElementById("campaignModalActionBtn");
+  const modalStatusText = document.getElementById("campaignModalStatusText");
+  const modalStreakBadge = document.getElementById("campaignModalStreakBadge");
+  const modalWinnerBox = document.getElementById("campaignModalWinnerBox");
+
+  if (!daysGrid || !actionBtn) return;
+
+  let state = evaluateAndSyncCheckinState(loadCheckinState());
+
+  // Sync with IndexedDB & Server Device Registry to prevent multi-join or reset bypass
+  function syncWithVaultAndServer() {
+    loadFromIndexedDBVault().then(idbRecord => {
+      if (idbRecord && idbRecord.deviceId === CURRENT_DEVICE_ID) {
+        if (idbRecord.joined && !state.joined) state.joined = true;
+        if (idbRecord.missed && !state.missed) {
+          state.missed = true;
+          state.missedDate = idbRecord.missedDate;
+        }
+        if (idbRecord.claimedDays) {
+          CAMPAIGN_DAYS.forEach(d => {
+            if (idbRecord.claimedDays[d.date] === true && d.date <= getLocalTodayStr()) {
+              state.claimedDays[d.date] = true;
+            }
+          });
+        }
+        if (isValidRewardCode(idbRecord.rewardCode) && !state.rewardCode) {
+          state.rewardCode = idbRecord.rewardCode;
+        }
+        state = evaluateAndSyncCheckinState(state);
+        renderCheckinUI();
+      }
+
+      fetch("/api/campaign/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId: CURRENT_DEVICE_ID, clientState: state })
+      })
+        .then(r => (r.ok ? r.json() : null))
+        .then(data => {
+          if (data && data.lockedState) {
+            const srv = data.lockedState;
+            if (srv.joined) state.joined = true;
+            if (srv.missed) {
+              state.missed = true;
+              state.missedDate = srv.missedDate || state.missedDate;
+            }
+            if (srv.claimedDays) {
+              CAMPAIGN_DAYS.forEach(d => {
+                if (srv.claimedDays[d.date] === true && d.date <= getLocalTodayStr()) {
+                  state.claimedDays[d.date] = true;
+                }
+              });
+            }
+            if (isValidRewardCode(srv.rewardCode)) {
+              state.rewardCode = srv.rewardCode;
+            }
+            state = evaluateAndSyncCheckinState(state);
+            renderCheckinUI();
+          }
+        })
+        .catch(() => {});
+    });
+  }
+
+  syncWithVaultAndServer();
+
+  function openCampaignPopup() {
+    state = evaluateAndSyncCheckinState(loadCheckinState());
+    renderCheckinUI();
+    if (campaignModal) {
+      campaignModal.classList.add("active");
+    }
+  }
+
+  function closeCampaignPopup() {
+    if (campaignModal) {
+      campaignModal.classList.remove("active");
+    }
+  }
+
+  window.openDailyCheckinPopup = openCampaignPopup;
+
+  function copyRewardCode() {
+    if (!state.rewardCode) return;
+    triggerHaptic();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(state.rewardCode).then(() => {
+        showToast(`Secret Code "${state.rewardCode}" copied! Take a screenshot too.`);
+      }).catch(() => {
+        showToast(`Secret Code: ${state.rewardCode}`);
+      });
+    } else {
+      showToast(`Secret Code: ${state.rewardCode}`);
+    }
+  }
+
+  if (copyCardSecretBtn) copyCardSecretBtn.addEventListener("click", copyRewardCode);
+  if (copyModalSecretBtn) copyModalSecretBtn.addEventListener("click", copyRewardCode);
+
+  function renderCheckinUI() {
+    const todayStr = getLocalTodayStr();
+    const isBeforeStart = todayStr < "2026-11-01";
+    const isDuringCampaign = todayStr >= "2026-11-01" && todayStr <= "2026-11-07";
+    const isTodayClaimed = Boolean(state.claimedDays[todayStr]);
+
+    if (cardDeviceIdTag) cardDeviceIdTag.textContent = CURRENT_DEVICE_ID;
+    if (modalDeviceIdTag) modalDeviceIdTag.textContent = CURRENT_DEVICE_ID;
+
+    // 1. Render 7-Day Grid (Nov 1 – Nov 7)
+    daysGrid.innerHTML = CAMPAIGN_DAYS.map(day => {
+      const isClaimed = Boolean(state.claimedDays[day.date]);
+      const isPastUnclaimed = day.date < todayStr && !isClaimed && !state.finished;
+      const isTodayActive = day.date === todayStr && !isClaimed && !state.missed && !state.finished;
+
+      const badgeStatus = isClaimed
+        ? "claimed"
+        : isPastUnclaimed
+        ? "missed"
+        : "unclaimed";
+
+      const pillClasses = [
+        "checkin-day-pill",
+        isClaimed ? "claimed" : "unclaimed",
+        isTodayActive ? "today-active" : "",
+        isPastUnclaimed ? "missed-day" : ""
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      return `
+        <div class="${pillClasses}" data-date="${day.date}">
+          ${getRosetteBadgeSVG(badgeStatus)}
+          <span class="checkin-day-name">${day.shortDay}</span>
+          <span class="checkin-day-date">${day.label}</span>
+        </div>
+      `;
+    }).join("");
+
+    // 2. Render Top Streak Heading & Subtitles
+    if (streakTitle) {
+      streakTitle.textContent = `${state.streakCount}-day streak`;
+    }
+
+    if (state.finished) {
+      if (!isValidRewardCode(state.rewardCode)) {
+        state.rewardCode = generateSixCharRewardCode();
+        saveCheckinState(state);
+      }
+
+      if (cardSecretCodeEl) cardSecretCodeEl.textContent = state.rewardCode;
+      if (modalSecretCodeEl) modalSecretCodeEl.textContent = state.rewardCode;
+
+      if (topSubtitle) topSubtitle.textContent = "7-Day Challenge Completed! 🎉";
+      if (streakSub) {
+        streakSub.textContent = `Secret Code: ${state.rewardCode} • Take a screenshot & submit to WhatsApp AI Bot!`;
+        streakSub.classList.remove("checkin-Streak-missed-text");
+      }
+      if (rewardLabel) rewardLabel.textContent = "6-Digit Secret Code";
+      if (rewardBig) rewardBig.textContent = state.rewardCode;
+      if (rewardUnit) rewardUnit.textContent = "Verified ✓";
+      if (rewardPerks) rewardPerks.textContent = "📸 Take Screenshot & Submit to WhatsApp AI Bot";
+
+      actionBtn.textContent = "WhatsApp AI Bot 🤖";
+      actionBtn.className = "btn-checkin-action btn-winner";
+      actionBtn.disabled = false;
+
+      if (winnerBanner) winnerBanner.style.display = "flex";
+    } else if (state.missed) {
+      if (topSubtitle) topSubtitle.textContent = "Campaign Streak Interrupted (1 Device = 1 Join)";
+      if (streakSub) {
+        streakSub.textContent = "১ দিন ক্লেইম মিস করায় এই ডিভাইসের স্ট্রিক বাতিল হয়েছে";
+        streakSub.classList.add("checkin-Streak-missed-text");
+      }
+      if (rewardLabel) rewardLabel.textContent = "Device Locked";
+      if (rewardBig) rewardBig.textContent = "Missed";
+      if (rewardUnit) rewardUnit.textContent = "Streak Broken";
+      if (rewardPerks) rewardPerks.textContent = `Device ${CURRENT_DEVICE_ID} • 1 Device can join only 1 time`;
+
+      actionBtn.textContent = "Missed";
+      actionBtn.className = "btn-checkin-action btn-missed";
+      actionBtn.disabled = false;
+      if (winnerBanner) winnerBanner.style.display = "none";
+    } else if (isBeforeStart) {
+      if (topSubtitle) topSubtitle.textContent = "Check in every day (Nov 1 – Nov 7) to win";
+      if (streakSub) {
+        streakSub.textContent = state.joined
+          ? `Device Locked (${CURRENT_DEVICE_ID}) ✓ • Starts Nov 1, 2026!`
+          : "1 Device = 1 Join • Starts November 1, 2026";
+        streakSub.classList.remove("checkin-Streak-missed-text");
+      }
+      if (rewardLabel) rewardLabel.textContent = "7-Day Grand Reward";
+      if (rewardBig) rewardBig.textContent = "5000GB";
+      if (rewardUnit) rewardUnit.textContent = "+ Gemini AI Pro";
+      if (rewardPerks) rewardPerks.textContent = "Full Nov Google Pro • Unlimited Image/Video • Flow • Meet";
+
+      actionBtn.textContent = state.joined ? "Joined ✓ (Nov 1)" : "Join Campaign";
+      actionBtn.className = "btn-checkin-action";
+      actionBtn.disabled = false;
+      if (winnerBanner) winnerBanner.style.display = "none";
+    } else if (isDuringCampaign) {
+      const currentDayObj = CAMPAIGN_DAYS.find(d => d.date === todayStr);
+      const dayNumber = currentDayObj ? currentDayObj.dayNum : state.streakCount + 1;
+
+      if (isTodayClaimed) {
+        if (topSubtitle) topSubtitle.textContent = `Device Verified (${CURRENT_DEVICE_ID})`;
+        if (streakSub) {
+          streakSub.textContent = `Day ${dayNumber}/7 claimed! Come back tomorrow to keep your streak.`;
+          streakSub.classList.remove("checkin-Streak-missed-text");
+        }
+        if (rewardLabel) rewardLabel.textContent = "Today's status";
+        if (rewardBig) rewardBig.textContent = `Day ${dayNumber}`;
+        if (rewardUnit) rewardUnit.textContent = "Claimed ✓";
+        if (rewardPerks) rewardPerks.textContent = `${7 - state.streakCount} more day(s) to unlock 6-Digit Secret Code!`;
+
+        actionBtn.textContent = "Claimed ✓";
+        actionBtn.className = "btn-checkin-action btn-claimed";
+        actionBtn.disabled = false;
+      } else {
+        if (topSubtitle) topSubtitle.textContent = "Check in every day to earn Google Pro";
+        if (streakSub) {
+          streakSub.textContent = state.joined
+            ? `Keep going! Claim Day ${dayNumber} of 7 today!`
+            : "Join (1 Device = 1 Time) & claim today's check-in!";
+          streakSub.classList.remove("checkin-Streak-missed-text");
+        }
+        if (rewardLabel) rewardLabel.textContent = "Today's reward";
+        if (rewardBig) rewardBig.textContent = `+Day ${dayNumber}`;
+        if (rewardUnit) rewardUnit.textContent = "of 7 Streak";
+        if (rewardPerks) rewardPerks.textContent = "Gemini AI Pro • Flow • Meet • 5000GB Storage";
+
+        actionBtn.textContent = state.joined ? "Check-in" : "Join & Claim";
+        actionBtn.className = "btn-checkin-action";
+        actionBtn.disabled = false;
+      }
+      if (winnerBanner) winnerBanner.style.display = "none";
+    }
+
+    // 3. Sync Campaign Popup Modal Status & CTA
+    if (modalStreakBadge) {
+      modalStreakBadge.textContent = `${state.streakCount} / 7 Days • ${CURRENT_DEVICE_ID}`;
+    }
+    if (modalWinnerBox) {
+      modalWinnerBox.style.display = state.finished ? "block" : "none";
+    }
+
+    if (modalStatusText && modalActionBtn) {
+      if (state.finished) {
+        modalStatusText.textContent = `Code: ${state.rewardCode} (Completed 7/7)`;
+        modalActionBtn.innerHTML = `<i class="fa-brands fa-whatsapp"></i> <span>WhatsApp AI Bot-এ সাবমিট করুন</span>`;
+      } else if (state.missed) {
+        modalStatusText.textContent = "Status: ১ দিন মিস করায় এই ডিভাইস লক হয়েছে";
+        modalActionBtn.innerHTML = `<i class="fa-solid fa-lock"></i> <span>Device Locked (1 Join Only)</span>`;
+      } else if (!state.joined) {
+        modalStatusText.textContent = "Status: Not Joined Yet (1 Device = 1 Join)";
+        modalActionBtn.innerHTML = `<i class="fa-solid fa-rocket"></i> <span>Join Campaign Now (1-Time Only)</span>`;
+      } else if (isBeforeStart) {
+        modalStatusText.textContent = "Status: Device Registered ✓ (Starts Nov 1)";
+        modalActionBtn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> <span>Device Joined • Starts Nov 1</span>`;
+      } else if (isDuringCampaign && !isTodayClaimed) {
+        modalStatusText.textContent = "Status: Today's Check-in Ready!";
+        modalActionBtn.innerHTML = `<i class="fa-solid fa-fire-flame-curved"></i> <span>Claim Today's Check-in Now</span>`;
+      } else {
+        modalStatusText.textContent = `Status: Active Streak (${state.streakCount}/7)`;
+        modalActionBtn.innerHTML = `<i class="fa-solid fa-check-double"></i> <span>Today Claimed • Come Back Tomorrow</span>`;
+      }
+    }
+  }
+
+  function handleJoinOrClaimAction(fromModal = false) {
+    triggerHaptic();
+    state = evaluateAndSyncCheckinState(loadCheckinState());
+    const todayStr = getLocalTodayStr();
+    const isBeforeStart = todayStr < "2026-11-01";
+    const isDuringCampaign = todayStr >= "2026-11-01" && todayStr <= "2026-11-07";
+
+    // Case 1: Already finished all 7 days -> Open Winner Popup with 6-digit code & WhatsApp AI Bot
+    if (state.finished) {
+      if (fromModal) {
+        const waLink = document.getElementById("checkinWhatsappDirectBtn");
+        if (waLink) waLink.click();
+      } else {
+        openCampaignPopup();
+      }
+      return;
+    }
+
+    // Case 2: Missed a day -> Device is permanently locked from re-joining
+    if (state.missed) {
+      showToast("১টি ডিভাইস থেকে ১ বারই অংশ নেওয়া যায়। ১ দিন মিস করায় অফারটি বাতিল হয়েছে।");
+      if (!fromModal) {
+        openCampaignPopup();
+      }
+      return;
+    }
+
+    // Case 3: Before Nov 1, 2026 -> Join campaign (1 time per device)
+    if (isBeforeStart) {
+      if (!state.joined) {
+        state.joined = true;
+        state.joinedAt = new Date().toISOString();
+        saveCheckinState(state);
+        syncWithVaultAndServer();
+        renderCheckinUI();
+        showToast(`🔒 ডিভাইস (${CURRENT_DEVICE_ID}) সফলভাবে যুক্ত হয়েছে! ১ নভেম্বর থেকে প্রতিদিন ক্লেইম করুন।`);
+        if (!fromModal) {
+          openCampaignPopup();
+        }
+      } else {
+        showToast("এই ডিভাইসটি ইতিমধ্যে ক্যাম্পেইনে যুক্ত আছে! ১ নভেম্বর থেকে Check-in শুরু হবে।");
+        if (!fromModal) {
+          openCampaignPopup();
+        } else {
+          closeCampaignPopup();
+        }
+      }
+      return;
+    }
+
+    // Case 4: During Nov 1 – Nov 7, 2026
+    if (isDuringCampaign) {
+      if (!state.joined) {
+        state.joined = true;
+        state.joinedAt = new Date().toISOString();
+      }
+
+      if (state.claimedDays[todayStr] === true) {
+        showToast("আজকের Check-in ইতিমধ্যে সম্পন্ন হয়েছে! আগামীকাল আবার ক্লেইম করুন।");
+        if (fromModal) {
+          closeCampaignPopup();
+        }
+        renderCheckinUI();
+        return;
+      }
+
+      // Claim today's check-in!
+      state.claimedDays[todayStr] = true;
+      state.claimTimestamps[todayStr] = new Date().toISOString();
+      state = evaluateAndSyncCheckinState(state);
+      syncWithVaultAndServer();
+      renderCheckinUI();
+
+      if (state.finished) {
+        // Day 7 on Nov 7 claimed! Automatically show 6-digit code & prompt screenshot + WhatsApp AI Bot!
+        showToast(`🎉 ৭ দিন সম্পন্ন! আপনার গোপন কোড: ${state.rewardCode} — স্ক্রিনশট নিয়ে WhatsApp AI Bot-এ দিন!`);
+        openCampaignPopup();
+      } else {
+        showToast(`🔥 Day ${state.streakCount}/7 Check-in Claimed! Keep your streak going!`);
+        if (fromModal) {
+          closeCampaignPopup();
+        }
+      }
+    }
+  }
+
+  // Event Listeners
+  actionBtn.addEventListener("click", () => handleJoinOrClaimAction(false));
+
+  if (openModalBtn) {
+    openModalBtn.addEventListener("click", () => {
+      triggerHaptic();
+      openCampaignPopup();
+    });
+  }
+
+  if (closeCampaignModalBtn) {
+    closeCampaignModalBtn.addEventListener("click", () => {
+      triggerHaptic();
+      closeCampaignPopup();
+    });
+  }
+
+  if (campaignModal) {
+    campaignModal.addEventListener("click", (e) => {
+      if (e.target === campaignModal) {
+        closeCampaignPopup();
+      }
+    });
+  }
+
+  if (modalActionBtn) {
+    modalActionBtn.addEventListener("click", () => handleJoinOrClaimAction(true));
+  }
+
+  // Initial render
+  renderCheckinUI();
+
+  // Auto-show campaign announcement popup if user has already completed dept selection
+  // and hasn't joined yet (or hasn't seen the campaign popup in this session)
+  const hasDeptSelected = Boolean(localStorage.getItem(LS_DEPT_PREF));
+  const seenPopupSession = sessionStorage.getItem("sastc_campaign_popup_seen");
+  if (hasDeptSelected && (!state.joined || state.finished) && !seenPopupSession) {
+    sessionStorage.setItem("sastc_campaign_popup_seen", "true");
+    setTimeout(() => {
+      openCampaignPopup();
+    }, 600);
+  }
+}
+
+

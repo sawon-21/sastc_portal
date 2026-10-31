@@ -2262,3 +2262,836 @@ body::before {
   font-weight: 600;
   color: var(--text-main);
 }
+
+/* ==========================================================================
+   DAILY CHECK-IN — REWARDS WIDGET & CAMPAIGN POPUP
+   ========================================================================== */
+
+.daily-checkin-wrapper {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkin-section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 0;
+}
+
+.checkin-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #18181b;
+  letter-spacing: -0.2px;
+}
+
+.checkin-section-title i {
+  color: #ff5b14;
+  font-size: 16px;
+}
+
+.checkin-info-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #5b46f6 0%, #9333ea 100%);
+  color: #ffffff;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px -3px rgba(91, 70, 246, 0.45);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.checkin-info-trigger:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.checkin-info-trigger:active {
+  transform: scale(0.96);
+}
+
+/* Top Streak Card (Matching Uploaded UI) */
+.daily-checkin-top-card {
+  background: linear-gradient(160deg, #e5f5b3 0%, #f2fad9 42%, #ffffff 92%);
+  border: 2px solid #ffffff;
+  outline: 1px solid rgba(163, 212, 68, 0.35);
+  border-radius: 22px;
+  padding: 18px 14px 14px;
+  box-shadow: 0 10px 24px -10px rgba(24, 24, 27, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.checkin-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.checkin-top-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkin-subtitle-top {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #52525b;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+.checkin-streak-heading {
+  font-size: 27px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.6px;
+  line-height: 1.15;
+  margin-bottom: 3px;
+}
+
+.checkin-streak-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525b;
+  line-height: 1.35;
+}
+
+.checkin-Streak-missed-text {
+  color: #dc2626 !important;
+  font-weight: 700;
+}
+
+.checkin-flame-wrap {
+  width: 78px;
+  height: 86px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+}
+
+.checkin-flame-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6px 12px rgba(255, 91, 20, 0.28));
+  animation: flamePulse 2.8s ease-in-out infinite;
+}
+
+@keyframes flamePulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.04); }
+}
+
+/* 7-Day Streak Row */
+.checkin-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.checkin-day-pill {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 9px 2px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(24, 24, 27, 0.05);
+  box-shadow: 0 3px 8px -2px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.checkin-day-pill.claimed {
+  background: #ffffff;
+  border-color: rgba(91, 70, 246, 0.22);
+  box-shadow: 0 4px 10px -2px rgba(91, 70, 246, 0.12);
+}
+
+.checkin-day-pill.today-active {
+  border: 1.5px solid #5b46f6;
+  box-shadow: 0 0 0 3px rgba(91, 70, 246, 0.14);
+  transform: translateY(-2px);
+}
+
+.checkin-day-pill.missed-day {
+  background: #fef2f2;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.checkin-badge-svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.checkin-day-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #3f3f46;
+  line-height: 1.1;
+}
+
+.checkin-day-pill.unclaimed .checkin-day-name {
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.checkin-day-pill.claimed .checkin-day-name {
+  color: #18181b;
+  font-weight: 700;
+}
+
+.checkin-day-date {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #71717a;
+  line-height: 1;
+}
+
+.checkin-day-pill.unclaimed .checkin-day-date {
+  color: #a1a1aa;
+}
+
+/* Bottom Action Card (Matching Uploaded UI with Purple-Pink Gradient Rim) */
+.daily-checkin-bottom-card {
+  position: relative;
+  border-radius: 22px;
+  padding: 1.5px 1.5px 7px 1.5px;
+  background: linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+  box-shadow: 0 10px 24px -8px rgba(168, 85, 247, 0.32);
+}
+
+.checkin-bottom-inner {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.checkin-reward-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.checkin-reward-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+
+.checkin-reward-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.checkin-reward-big {
+  font-size: 28px;
+  font-weight: 800;
+  color: #5b46f6;
+  letter-spacing: -0.8px;
+  line-height: 1.05;
+}
+
+.checkin-reward-unit {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #18181b;
+}
+
+.checkin-reward-perks {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkin-cta-wrap {
+  flex-shrink: 0;
+}
+
+.btn-checkin-action {
+  background: linear-gradient(180deg, #d6ec70 0%, #b7d83d 100%);
+  color: #18181b;
+  border: 1px solid #a3c62b;
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.7), 0 4px 12px -2px rgba(163, 198, 43, 0.45);
+  font-size: 14.5px;
+  font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-checkin-action:hover:not(:disabled) {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+
+.btn-checkin-action:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.btn-checkin-action.btn-claimed {
+  background: #f4f4f5;
+  color: #52525b;
+  border-color: #e4e4e7;
+  box-shadow: none;
+}
+
+.btn-checkin-action.btn-missed {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+  box-shadow: none;
+}
+
+.btn-checkin-action.btn-winner {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border-color: #047857;
+  box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.5);
+}
+
+/* Winner WhatsApp Claim Banner inside Bottom Card */
+.checkin-winner-banner {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-radius: 16px;
+  margin: 6px 6px 2px;
+  padding: 12px 14px;
+  border: 1px solid #6ee7b7;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkin-winner-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  color: #065f46;
+}
+
+.checkin-winner-text i {
+  font-size: 20px;
+  color: #d97706;
+  margin-top: 2px;
+}
+
+.checkin-winner-text strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #064e3b;
+  margin-bottom: 2px;
+}
+
+.btn-whatsapp-claim {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #16a34a;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 800;
+  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.45);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-whatsapp-claim:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   CAMPAIGN OFFER & WINNER POPUP MODAL
+   ========================================================================== */
+
+.campaign-modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  border-radius: 24px;
+  overflow-y: auto;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.45);
+  border: 1.5px solid rgba(168, 85, 247, 0.35);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.campaign-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 5;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.campaign-modal-close:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(1.05);
+}
+
+.campaign-hero-banner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 52%, #be185d 100%);
+  color: #ffffff;
+  padding: 22px 20px 18px;
+  text-align: center;
+  position: relative;
+}
+
+.campaign-live-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #fef08a;
+  margin-bottom: 12px;
+}
+
+.campaign-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+
+.campaign-hero-icon-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.campaign-fire-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff9e2c 0%, #ff3d00 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(255, 61, 0, 0.4);
+}
+
+.campaign-plus-sign {
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.campaign-google-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #18181b;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.campaign-google-badge i {
+  color: #4285f4;
+  font-size: 19px;
+}
+
+.campaign-google-badge span {
+  background: linear-gradient(90deg, #4f46e5, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+}
+
+.campaign-hero-banner h2 {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+.campaign-hero-sub {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.campaign-modal-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.campaign-perks-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #18181b;
+}
+
+.campaign-perks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.campaign-perk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  padding: 10px 12px;
+}
+
+.perk-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.perk-icon.gemini  { background: #ede9fe; color: #6d28d9; }
+.perk-icon.flow    { background: #fce7f3; color: #be185d; }
+.perk-icon.meet    { background: #dcfce7; color: #15803d; }
+.perk-icon.storage { background: #dbeafe; color: #1d4ed8; }
+
+.perk-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.perk-text strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #18181b;
+  line-height: 1.3;
+}
+
+.perk-text span {
+  display: block;
+  font-size: 11.5px;
+  color: #52525b;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.campaign-rules-box {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 13px;
+  padding: 11px 13px;
+}
+
+.rules-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #b45309;
+  margin-bottom: 6px;
+}
+
+.campaign-rules-box ul {
+  margin: 0;
+  padding-left: 17px;
+  font-size: 11.5px;
+  color: #78350f;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.campaign-winner-box {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1.5px solid #10b981;
+  border-radius: 15px;
+  padding: 14px;
+  text-align: center;
+}
+
+.campaign-winner-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #065f46;
+  margin-bottom: 6px;
+}
+
+.campaign-winner-header i {
+  color: #f59e0b;
+  font-size: 18px;
+}
+
+.campaign-winner-box p {
+  font-size: 12.5px;
+  color: #064e3b;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.btn-campaign-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #16a34a;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px -3px rgba(22, 163, 74, 0.5);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-campaign-whatsapp:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.campaign-status-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 11px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: #3f3f46;
+}
+
+.campaign-status-strip strong {
+  color: #5b46f6;
+  font-weight: 800;
+}
+
+.campaign-modal-footer {
+  padding: 0 18px 18px;
+}
+
+.btn-campaign-primary {
+  width: 100%;
+  background: linear-gradient(135deg, #5b46f6 0%, #9333ea 55%, #db2777 100%);
+  color: #ffffff;
+  border: none;
+  padding: 13px 18px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px -5px rgba(91, 70, 246, 0.55);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn-campaign-primary:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.btn-campaign-primary:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 390px) {
+  .checkin-streak-heading {
+    font-size: 23px;
+  }
+  .checkin-reward-big {
+    font-size: 24px;
+  }
+  .btn-checkin-action {
+    padding: 10px 14px;
+    font-size: 13.5px;
+  }
+  .checkin-days-grid {
+    gap: 4px;
+  }
+}
+
+/* Secret 6-Digit Verification Code Display */
+.secret-code-card {
+  background: #ffffff;
+  border: 1.5px dashed #10b981;
+  border-radius: 13px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: inset 0 2px 6px rgba(16, 185, 129, 0.06);
+}
+
+.modal-secret-card {
+  margin-bottom: 12px;
+}
+
+.secret-code-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #047857;
+  letter-spacing: 0.4px;
+}
+
+.device-lock-tag {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.secret-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.secret-code-digits {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 5px;
+  color: #111827;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 9px;
+  padding: 5px 12px;
+  flex: 1;
+  text-align: center;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.btn-copy-secret {
+  background: #18181b;
+  color: #ffffff;
+  border: none;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+}
+
+.btn-copy-secret:hover {
+  background: #27272a;
+}
+
+.btn-copy-secret:active {
+  transform: scale(0.96);
+}
+
+.screenshot-hint-pill {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+
