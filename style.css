@@ -3094,4 +3094,183 @@ body::before {
   gap: 6px;
 }
 
+/* ==========================================================================
+   RANDOM MOTIVATION POPUP MODAL (YOUR NEXT MISSION)
+   ========================================================================== */
 
+.motivation-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.motivation-popup-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+div:nth-of-type(2) > section#view-home:nth-of-type(1) > div#motivationPopupModal:nth-of-type(2) > div#motivationMissionCard:nth-of-type(1),
+.motivation-mission-card {
+  width: 100%;
+  max-width: 410px;
+  background: #e6eee6;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  outline: 1px solid rgba(100, 130, 112, 0.18);
+  border-radius: 24px;
+  padding: 26px 20px 22px 24px;
+  margin: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.35), 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+  animation: motivationPopupScaleIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes motivationPopupScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.motivation-popup-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(28, 45, 36, 0.08);
+  border: 1px solid rgba(28, 45, 36, 0.1);
+  color: #3b5244;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 5;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.motivation-popup-close:hover {
+  background: rgba(28, 45, 36, 0.15);
+  transform: scale(1.06);
+}
+
+.motivation-popup-close:active {
+  transform: scale(0.94);
+}
+
+.motivation-mission-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 2;
+}
+
+.motivation-mission-tag {
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #63806e;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.motivation-mission-title {
+  font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 23.5px;
+  font-weight: 700;
+  color: #1c2d24;
+  line-height: 1.32;
+  letter-spacing: -0.2px;
+  margin-bottom: 12px;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.motivation-mission-sub {
+  font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #5c7063;
+  line-height: 1.48;
+  margin: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.motivation-mission-card.switching .motivation-mission-title,
+.motivation-mission-card.switching .motivation-mission-sub {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.motivation-mission-art {
+  width: 116px;
+  height: 118px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: -4px;
+  margin-right: -2px;
+  z-index: 1;
+}
+
+.motivation-art-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.motivation-sparkle-star {
+  transform-origin: 107px 36px;
+  animation: missionSparklePulse 3s ease-in-out infinite;
+}
+
+@keyframes missionSparklePulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.12) rotate(6deg);
+  }
+}
+
+@media (max-width: 390px) {
+  .motivation-mission-card {
+    padding: 20px 14px 18px 18px;
+    gap: 8px;
+  }
+  .motivation-mission-title {
+    font-size: 20.5px;
+  }
+  .motivation-mission-sub {
+    font-size: 13.5px;
+  }
+  .motivation-mission-art {
+    width: 100px;
+    height: 104px;
+  }
+}

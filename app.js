@@ -111,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavTabs();
   initPwaInstall();
   initCalculator();
+  initRandomMotivationCard();
   initDailyCheckinCampaign();
   updateHeaderDeptPill();
 
@@ -223,12 +224,12 @@ function initFirstVisitDeptPopup() {
     updateBadges();
     showToast(`Department set to ${deptPreference}`);
 
-    // Show Daily Check-in Campaign popup after onboarding completes
+    // Show Random Motivation popup after onboarding completes
     setTimeout(() => {
-      if (typeof window.openDailyCheckinPopup === "function") {
-        window.openDailyCheckinPopup();
+      if (typeof window.openMotivationPopup === "function") {
+        window.openMotivationPopup();
       }
-    }, 450);
+    }, 350);
   });
 }
 
@@ -2009,16 +2010,170 @@ function initDailyCheckinCampaign() {
   // Initial render
   renderCheckinUI();
 
-  // Auto-show campaign announcement popup if user has already completed dept selection
-  // and hasn't joined yet (or hasn't seen the campaign popup in this session)
+  // Auto-show winner popup only if 7-day challenge finished and not yet seen this session
   const hasDeptSelected = Boolean(localStorage.getItem(LS_DEPT_PREF));
   const seenPopupSession = sessionStorage.getItem("sastc_campaign_popup_seen");
-  if (hasDeptSelected && (!state.joined || state.finished) && !seenPopupSession) {
+  if (hasDeptSelected && state.finished && !seenPopupSession) {
     sessionStorage.setItem("sastc_campaign_popup_seen", "true");
     setTimeout(() => {
       openCampaignPopup();
-    }, 600);
+    }, 800);
   }
 }
+
+/**
+ * Random Motivation Mission Popup ("YOUR NEXT MISSION")
+ * Automatically pops up with a fresh random Bengali motivation every time the user enters the app
+ */
+function initRandomMotivationCard() {
+  const modal = document.getElementById("motivationPopupModal");
+  const card = document.getElementById("motivationMissionCard");
+  const closeBtn = document.getElementById("closeMotivationPopupBtn");
+  const mainEl = document.getElementById("motivationMainText");
+  const subEl = document.getElementById("motivationSubText");
+  if (!modal || !card || !mainEl || !subEl) return;
+
+  const MOTIVATION_MISSIONS = [
+    {
+      main: "আজকের তুমি যেন<br>গতকালের চেয়ে<br>ভালো।",
+      sub: "পারফেক্ট হতে হবে না, শুধু একটু<br>এগোলেই চলবে।"
+    },
+    {
+      main: "স্বপ্নটা যখন তোমার,<br>লড়াইটাও তোমাকেই<br>করতে হবে।",
+      sub: "আজকের একটুখানি পরিশ্রমই আগামীকালের<br>বড় সাফল্যের ভিত্তি।"
+    },
+    {
+      main: "দেরি হোক, তবুও<br>থেমে যেও না<br>কখনো।",
+      sub: "ছোট ছোট পদক্ষেপই একদিন তোমাকে<br>গন্তব্যে পৌঁছে দেবে।"
+    },
+    {
+      main: "ক্লান্ত হলে বিশ্রাম নাও,<br>কিন্তু হাল ছেড়ো না<br>একেবারে।",
+      sub: "মনে রেখো, প্রতিটি কঠিন রাতের পরেই<br>একটি সুন্দর সকাল আসে।"
+    },
+    {
+      main: "নিজের ওপর বিশ্বাস রাখো,<br>তুমি পারবেই<br>ইনশাআল্লাহ।",
+      sub: "অন্যের সাথে তুলনা নয়, নিজের সেরাটা<br>দেওয়ার চেষ্টা করো প্রতিদিন।"
+    },
+    {
+      main: "আজকের একটা অধ্যায়,<br>কালকের দুশ্চিন্তা<br>কমাবে।",
+      sub: "সব একসাথে শেষ করতে হবে না,<br>শুধু শুরুটা করো এখন।"
+    },
+    {
+      main: "ভয়কে জয় করার<br>একমাত্র উপায় হলো<br>শুরু করে দেওয়া।",
+      sub: "যতটুকু সময় হাতে আছে, তার সর্বোচ্চ<br>ব্যবহার করো আজ।"
+    },
+    {
+      main: "পরিশ্রম কখনো<br>বৃথা যায় না,<br>ধৈর্য ধরো।",
+      sub: "আজ যে পৃষ্ঠাগুলো উল্টাচ্ছো, সেগুলোই<br>তোমার ভবিষ্যৎ গড়বে।"
+    },
+    {
+      main: "বড় কিছু পেতে হলে<br>নিয়মিত অভ্যাসে<br>মন দাও।",
+      sub: "প্রতিদিন ১% উন্নতিও বছর শেষে<br>তোমাকে অনন্য উচ্চতায় নেবে।"
+    },
+    {
+      main: "ফোকাস ধরে রাখো,<br>অজুহাতকে বিদায়<br>দাও আজ।",
+      sub: "তোমার লক্ষ্য তোমার চেয়ে বেশি আর<br>কেউ অনুভব করতে পারবে না।"
+    },
+    {
+      main: "হার মানার আগে<br>আরও একবার চেষ্টা<br>করে দেখো।",
+      sub: "হয়তো পরের চেষ্টাটিই তোমার জীবনের<br>সেরা টার্নিং পয়েন্ট।"
+    },
+    {
+      main: "সময় চলে যায়,<br>কিন্তু তোমার শেখাটা<br>থেকে যায়।",
+      sub: "আজকের দিনটাকে এমনভাবে কাজে লাগাও যেন<br>রাতে তৃপ্তির ঘুম আসে।"
+    },
+    {
+      main: "কঠিন বিষয়গুলোই<br>তোমাকে সবচেয়ে বেশি<br>শক্তিশালী করে।",
+      sub: "ভুল থেকে শেখো, প্রতিটি ভুলই নতুন<br>করে শেখার সুযোগ।"
+    },
+    {
+      main: "বাবা-মায়ের মুখের<br>হাসির জন্য হলেও<br>লেগে থাকো।",
+      sub: "তোমার সফলতার গল্পটা লেখার কলম<br>এখন তোমারই হাতে।"
+    },
+    {
+      main: "অতিরিক্ত চিন্তা বাদ দিয়ে<br>কাজে নেমে পড়ো<br>এই মুহূর্তে।",
+      sub: "দুশ্চিন্তা কোনো সমাধান দেয় না,<br>প্রস্তুতিই আত্মবিশ্বাস বাড়ায়।"
+    },
+    {
+      main: "সাফল্যের কোনো<br>শর্টকাট নেই,<br>ধারাবাহিকতাই আসল।",
+      sub: "প্রতিদিন অল্প করে পড়লেও পরীক্ষার আগে<br>পাহাড়সম চাপ থাকবে না।"
+    },
+    {
+      main: "নিজেকে এমনভাবে গড়ো,<br>যেন ভবিষ্যৎ তোমাকে<br>ধন্যবাদ দেয়।",
+      sub: "আজকের ত্যাগই আগামী দিনের<br>স্বাধীনতা ও গর্ব।"
+    },
+    {
+      main: "মনোযোগ যেখানে যাবে,<br>সাফল্য সেখানেই<br>ধরা দেবে।",
+      sub: "ফোনের নোটিফিকেশন একটু দূরে রেখে<br>নিজের লক্ষ্যে ডুব দাও।"
+    },
+    {
+      main: "তুমি যতটা ভাবো,<br>তার চেয়েও অনেক বেশি<br>সক্ষম তুমি।",
+      sub: "নিজের সীমাবদ্ধতাকে চ্যালেঞ্জ করো,<br>নতুন দিগন্ত খুলে যাবে।"
+    },
+    {
+      main: "গতকাল যা চলে গেছে,<br>তা নিয়ে আফসোস<br>করো না।",
+      sub: "আজকের দিনটা সম্পূর্ণ নতুন একটা সুযোগ—<br>নতুন উদ্যমে শুরু করো।"
+    },
+    {
+      main: "নীরবে পরিশ্রম করো,<br>সফলতাই তোমার হয়ে<br>কথা বলবে।",
+      sub: "সবাইকে জানানোর দরকার নেই, নিজের<br>কাজে ডুবে থাকো।"
+    },
+    {
+      main: "প্রতিটি ছোট জয়কে<br>উদযাপন করতে<br>শেখো আজ।",
+      sub: "একটি টপিক শেষ করাও তোমাকে লক্ষ্যের<br>এক ধাপ কাছে নিয়ে যায়।"
+    }
+  ];
+
+  const LS_LAST_MOTIVATION_IDX = "sastc_last_motivation_idx";
+
+  function pickNextMotivation() {
+    const lastIdx = parseInt(localStorage.getItem(LS_LAST_MOTIVATION_IDX) ?? "-1", 10);
+    let nextIdx = Math.floor(Math.random() * MOTIVATION_MISSIONS.length);
+    if (MOTIVATION_MISSIONS.length > 1 && nextIdx === lastIdx) {
+      nextIdx = (nextIdx + 1 + Math.floor(Math.random() * (MOTIVATION_MISSIONS.length - 1))) % MOTIVATION_MISSIONS.length;
+    }
+    localStorage.setItem(LS_LAST_MOTIVATION_IDX, String(nextIdx));
+
+    const item = MOTIVATION_MISSIONS[nextIdx];
+    mainEl.innerHTML = item.main;
+    subEl.innerHTML = item.sub;
+  }
+
+  function openMotivationPopup() {
+    pickNextMotivation();
+    modal.classList.add("active");
+  }
+
+  function closeMotivationPopup() {
+    modal.classList.remove("active");
+  }
+
+  window.openMotivationPopup = openMotivationPopup;
+
+  // Automatically open popup on every app entry (if department is already selected)
+  const existingDept = localStorage.getItem(LS_DEPT_PREF);
+  if (existingDept && ["CSE", "AG", "BBA"].includes(existingDept)) {
+    setTimeout(() => {
+      openMotivationPopup();
+    }, 250);
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      triggerHaptic();
+      closeMotivationPopup();
+    });
+  }
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      triggerHaptic();
+      closeMotivationPopup();
+    }
+  });
+}
+
+
 
 
