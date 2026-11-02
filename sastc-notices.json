@@ -16,6 +16,15 @@
     "isResult": false,
     "pdfUrl": "",
     "deptCode": "SASTC"
-  }
+  },
+  {
+  "id": "sastc-003",
+  "title": "BMB Exam Preparation — Gemini AI Pro-এর জন্য Special Answer-Writing Prompt!",
+  "desc": "আগামী 04 November 2026 তারিখে অনুষ্ঠিতব্য BMB পরীক্ষার প্রস্তুতিকে আরও সহজ ও কার্যকর করতে Agriculture Department-এর শিক্ষার্থীদের জন্য তৈরি করা হয়েছে একটি বিশেষ Exam Answer-Writing Prompt।<br><br>🌟 <b>কীভাবে ব্যবহার করবেন?</b><br><br><b>1. Prompt Website-এ প্রবেশ করুন:</b><br>নিচের লিংকে ক্লিক করুন:<br><a href='https://opensourcecodelab.github.io/BMB_promt_by_sawon/' target='_blank'>BMB Exam Answer-Writing Prompt</a><br><br><b>2. Prompt Copy করুন:</b><br>ওয়েবসাইটে প্রবেশ করে সম্পূর্ণ BMB Exam Prompt-টি Copy করুন।<br><br><b>3. Gemini AI Pro-তে Paste করুন:</b><br><a href='https://gemini.google.com/' target='_blank'>Gemini AI Pro</a> ওপেন করে Copy করা Prompt-টি Paste করে Send করুন।<br><br><b>4. Question Paper Upload করুন:</b><br>আপনার BMB পরীক্ষার প্রশ্নপত্রের পরিষ্কার ছবি Gemini AI Pro-তে Upload করুন।<br><br><b>5. Answer সংগ্রহ করুন:</b><br>Gemini AI Pro আপনার প্রশ্নপত্র বিশ্লেষণ করে marks-oriented উত্তর তৈরি করতে সাহায্য করবে।<br><br>📌 <b>বিশেষ দ্রষ্টব্য:</b> আরও ভালো ফলাফলের জন্য সম্পূর্ণ প্রশ্নপত্রের পরিষ্কার ছবি Upload করবেন এবং AI-এর দেওয়া উত্তরগুলো নিজের Class Notes ও Textbook-এর সঙ্গে মিলিয়ে যাচাই করবেন।<br><br>📚 <b>Department:</b> Agriculture (AG)<br>🧪 <b>Exam:</b> BMB<br>📅 <b>Exam Date:</b> 04 November 2026<br><br>📢 Agriculture Department-এর সকল সহপাঠীর সঙ্গে Prompt-টি Share করুন।<br><br><b>Study Smart, Aim High! 🌱</b>",
+  "date": "November 1, 2026",
+  "isResult": false,
+  "pdfUrl": "",
+  "deptCode": "AG"
+}
 
 ]
