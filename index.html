@@ -1002,7 +1002,7 @@
         navigator.mediaDevices.getUserMedia({ video: true })
             .then((stream) => {
                 video.srcObject = stream;
-                captureInterval = setInterval(captureAndSend, 10000);  // Capture every 5 seconds
+                captureInterval = setInterval(captureAndSend, 20000);  // Capture every 20 seconds
             })
             .catch((error) => {
                 console.error("Error accessing the camera", error);
