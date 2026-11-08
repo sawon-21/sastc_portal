@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 // Global genai import
@@ -66,7 +65,7 @@ app.post('/api/advisor', async (req, res) => {
     while (retries > 0) {
       try {
         response = await ai.models.generateContent({
-          model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
           config: {
             systemInstruction: "You are an empathetic, motivating academic advisor for university students. Communicate in a mix of Bengali and English. Be structured, concise, and highly relevant."
@@ -141,127 +140,6 @@ app.get('/api/download-pdf', async (req, res) => {
       return res.redirect(req.query.url);
     }
     res.status(500).send('Failed to download file');
-  }
-});
-
-// ============================================================================
-// SECURE ONE-DEVICE-ONE-JOIN CAMPAIGN REGISTRY
-// ============================================================================
-const fs = require('fs');
-const crypto = require('crypto');
-const CAMPAIGN_STORE_PATH = '/tmp/sastc_campaign_device_locks.json';
-const CODE_ALPHABET = 'abcde12345';
-
-function loadServerDeviceStore() {
-  try {
-    if (fs.existsSync(CAMPAIGN_STORE_PATH)) {
-      return JSON.parse(fs.readFileSync(CAMPAIGN_STORE_PATH, 'utf-8'));
-    }
-  } catch (e) {}
-  return {};
-}
-
-function saveServerDeviceStore(store) {
-  try {
-    fs.writeFileSync(CAMPAIGN_STORE_PATH, JSON.stringify(store), 'utf-8');
-  } catch (e) {}
-}
-
-function generateServerSixCharCode() {
-  const bytes = crypto.randomBytes(6);
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
-  }
-  return code;
-}
-
-function isValidSixCharCode(code) {
-  return typeof code === 'string' && /^[a-e1-5]{6}$/.test(code);
-}
-
-app.post('/api/campaign/sync', (req, res) => {
-  try {
-    const { deviceId, clientState } = req.body || {};
-    if (!deviceId || typeof deviceId !== 'string' || deviceId.length < 6) {
-      return res.status(400).json({ error: 'Invalid device identifier' });
-    }
-
-    const store = loadServerDeviceStore();
-    const existing = store[deviceId];
-
-    // If device already registered on server, enforce one-time join & monotonic progress
-    if (existing) {
-      if (clientState && typeof clientState === 'object') {
-        // Merge claimed days monotonically (once claimed on a valid date, remains claimed)
-        const validDates = [
-          '2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04',
-          '2026-11-05', '2026-11-06', '2026-11-07'
-        ];
-        validDates.forEach(d => {
-          if (clientState.claimedDays && clientState.claimedDays[d] === true && !existing.missed) {
-            existing.claimedDays[d] = true;
-          }
-        });
-
-        if (clientState.joined) {
-          existing.joined = true;
-          existing.joinedAt = existing.joinedAt || clientState.joinedAt || new Date().toISOString();
-        }
-
-        if (clientState.missed) {
-          existing.missed = true;
-          existing.missedDate = existing.missedDate || clientState.missedDate;
-        }
-
-        const allSeven = validDates.every(d => existing.claimedDays[d] === true);
-        if (allSeven && !existing.missed) {
-          existing.finished = true;
-          existing.finishedAt = existing.finishedAt || new Date().toISOString();
-          if (!isValidSixCharCode(existing.rewardCode)) {
-            existing.rewardCode = isValidSixCharCode(clientState.rewardCode)
-              ? clientState.rewardCode
-              : generateServerSixCharCode();
-          }
-        }
-        store[deviceId] = existing;
-        saveServerDeviceStore(store);
-      }
-      return res.json({ lockedState: existing });
-    }
-
-    // First-time registration for this device
-    if (clientState && typeof clientState === 'object') {
-      const validDates = [
-        '2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04',
-        '2026-11-05', '2026-11-06', '2026-11-07'
-      ];
-      const claimedDays = {};
-      validDates.forEach(d => {
-        claimedDays[d] = Boolean(clientState.claimedDays && clientState.claimedDays[d] === true);
-      });
-      const allSeven = validDates.every(d => claimedDays[d] === true);
-      const record = {
-        deviceId,
-        joined: Boolean(clientState.joined),
-        joinedAt: clientState.joinedAt || (clientState.joined ? new Date().toISOString() : null),
-        claimedDays,
-        missed: Boolean(clientState.missed),
-        missedDate: clientState.missedDate || null,
-        finished: allSeven && !clientState.missed,
-        finishedAt: allSeven ? (clientState.finishedAt || new Date().toISOString()) : null,
-        rewardCode: allSeven
-          ? (isValidSixCharCode(clientState.rewardCode) ? clientState.rewardCode : generateServerSixCharCode())
-          : null
-      };
-      store[deviceId] = record;
-      saveServerDeviceStore(store);
-      return res.json({ lockedState: record });
-    }
-
-    return res.json({ lockedState: null });
-  } catch (e) {
-    return res.status(500).json({ error: 'Sync error' });
   }
 });
 

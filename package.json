@@ -6,13 +6,10 @@
   "scripts": {
     "dev": "node server.js",
     "build": "echo \"No build step required\"",
-    "start": "node server.js",
-    "lint": "node -c server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2"
+    "express": "^4.21.1"
   }
 }
-
